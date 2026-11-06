@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#059669" />
+<title>ED EMR Suite — Emergency Documentation</title>
+<link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1>ED EMR Suite <span class="tagline">Emergency documentation · NABH-friendly</span></h1>
+  </div>
+  <span class="lock-badge" id="lockBadge">SIGNED &amp; LOCKED</span>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Documentation</span><span id="progressPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</header>
+
+<main class="wrap" id="sharedFields">
+
+<section class="card" id="scenarioPickerCard">
+  <h2 class="card-title">Clinical scenario <span class="req">Select one</span></h2>
+  <div class="scenario-grid chips" id="scenarioGrid"></div>
+</section>
+
+<section class="card" id="card-header">
+  <h2 class="card-title">Patient header <span class="req">Mandatory</span></h2>
+  <div class="grid grid-2">
+    <label class="field">UHID / MRN *<input type="text" id="uhid" placeholder="Hospital UHID" /></label>
+    <label class="field">Full name *<input type="text" id="ptName" placeholder="Patient name" /></label>
+    <label class="field">Age (years) *<input type="number" id="age" min="0" max="120" /></label>
+    <label class="field">Sex *<select id="sex"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+    <label class="field">Arrival date &amp; time *<input type="datetime-local" id="arrival" /></label>
+    <label class="field">MLC *<select id="mlc"><option value="">Select</option><option>No</option><option>Yes</option></select></label>
+  </div>
+  <div class="sublabel">Triage category *</div>
+  <div class="chips" id="triageChips">
+    <button type="button" class="chip triage-red" data-val="Red">Red</button>
+    <button type="button" class="chip triage-orange" data-val="Orange">Orange</button>
+    <button type="button" class="chip triage-yellow" data-val="Yellow">Yellow</button>
+    <button type="button" class="chip triage-green" data-val="Green">Green</button>
+  </div>
+  <input type="hidden" id="triage" value="" />
+  <div class="sublabel">Allergies *</div>
+  <div class="chips" style="margin-bottom:8px"><button type="button" class="chip" id="nkdaChip">NKDA</button></div>
+  <label class="field">Allergy details<input type="text" id="allergies" placeholder="Or leave blank if NKDA" /></label>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Shared timestamps</h2>
+  <div class="ts-row"><span class="ts-label">Doctor seen</span><input type="datetime-local" id="tsDoctor" /><button type="button" class="btn-now" data-ts="tsDoctor">Now</button></div>
+  <div class="ts-row"><span class="ts-label">Decision time</span><input type="datetime-local" id="tsDecision" /><button type="button" class="btn-now" data-ts="tsDecision">Now</button></div>
+  <div class="ts-row"><span class="ts-label">Disposition time</span><input type="datetime-local" id="tsDisposition" /><button type="button" class="btn-now" data-ts="tsDisposition">Now</button></div>
+  <div class="metric-badges" id="doorMetrics"></div>
+</section>
+
+<section class="card hidden" id="scenarioTimestamps"></section>
+
+<section class="card">
+  <h2 class="card-title">Vitals</h2>
+  <div class="grid grid-3">
+    <label class="field">HR (/min)<input type="number" id="hr" /></label>
+    <label class="field">BP right (mmHg)<input type="text" id="bpRight" placeholder="140/90" /></label>
+    <label class="field">BP left (mmHg)<input type="text" id="bpLeft" placeholder="138/88" /></label>
+    <label class="field">RR (/min)<input type="number" id="rr" /></label>
+    <label class="field">SpO₂ (%)<input type="number" id="spo2" /></label>
+    <label class="field">Temp (°C)<input type="number" id="temp" step="0.1" /></label>
+    <label class="field">GCS<input type="text" id="gcs" placeholder="E4V5M6" /></label>
+    <label class="field">CBG (mg/dL)<input type="number" id="cbg" /></label>
+    <label class="field">Pain 0–10
+      <div class="range-wrap"><input type="range" id="pain" min="0" max="10" value="0" /><span class="range-val" id="painVal">0</span></div>
+    </label>
+  </div>
+  <div class="alert danger" id="bpDiffAlert"></div>
+</section>
+
+<section class="card">
+  <h2 class="card-title" id="scenarioTitle">Scenario details</h2>
+  <div id="scenarioBody"><p style="color:var(--muted);margin:0">Select a clinical scenario above to load its template.</p></div>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Treatment given (shared)</h2>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txAspChk" /> Aspirin</div>
+    <label class="field">Dose<input type="text" id="txAspDose" placeholder="e.g. 325 mg" /></label>
+    <label class="field">Time<input type="datetime-local" id="txAspTime" /></label>
+    <button type="button" class="btn-now" data-ts="txAspTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txP2yChk" /> Clopidogrel / Ticagrelor</div>
+    <label class="field">Dose<input type="text" id="txP2yDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txP2yTime" /></label>
+    <button type="button" class="btn-now" data-ts="txP2yTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txAcChk" /> Anticoagulant</div>
+    <label class="field">Dose<input type="text" id="txAcDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txAcTime" /></label>
+    <button type="button" class="btn-now" data-ts="txAcTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txNitChk" /> Nitrate</div>
+    <label class="field">Dose<input type="text" id="txNitDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txNitTime" /></label>
+    <button type="button" class="btn-now" data-ts="txNitTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txAnalChk" /> Analgesia</div>
+    <label class="field">Dose<input type="text" id="txAnalDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txAnalTime" /></label>
+    <button type="button" class="btn-now" data-ts="txAnalTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txO2Chk" /> Oxygen</div>
+    <label class="field">Dose<input type="text" id="txO2Dose" placeholder="device/flow" /></label>
+    <label class="field">Time<input type="datetime-local" id="txO2Time" /></label>
+    <button type="button" class="btn-now" data-ts="txO2Time">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txOthChk" /> Other</div>
+    <label class="field">Dose<input type="text" id="txOthDose" placeholder="details" /></label>
+    <label class="field">Time<input type="datetime-local" id="txOthTime" /></label>
+    <button type="button" class="btn-now" data-ts="txOthTime">Now</button>
+  </div>
+
+  <label class="field" style="margin-top:10px">Additional impression / plan<textarea id="dxText" placeholder="Free-text impression…"></textarea></label>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Disposition</h2>
+  <div class="chips" data-chip-id="disposition" data-multi="false">
+    <button type="button" class="chip" data-val="Admit CCU">Admit CCU</button>
+    <button type="button" class="chip" data-val="Admit ward">Admit ward</button>
+    <button type="button" class="chip" data-val="Cath lab">Cath lab</button>
+    <button type="button" class="chip" data-val="Observation">Observation</button>
+    <button type="button" class="chip" data-val="Discharge">Discharge</button>
+    <button type="button" class="chip" data-val="LAMA/DAMA">LAMA/DAMA</button>
+    <button type="button" class="chip" data-val="Referred/transferred">Referred/transferred</button>
+    <button type="button" class="chip" data-val="Death">Death</button>
+  </div>
+  <div class="alert warn" id="dispWarn"></div>
+  <div class="disp-extra" id="dispDischarge">
+    <div class="sublabel" style="margin-top:0">Discharge checklist</div>
+    <label class="check-row"><input type="checkbox" id="dcPrecautions" /> Return precautions advised</label>
+    <label class="check-row"><input type="checkbox" id="dcFollowup" /> Follow-up plan documented</label>
+    <label class="check-row"><input type="checkbox" id="dcInstructions" /> Instructions given</label>
+    <label class="field">Detail<textarea id="dcDetail"></textarea></label>
+  </div>
+  <div class="disp-extra" id="dispLama">
+    <div class="sublabel" style="margin-top:0">LAMA / DAMA</div>
+    <label class="check-row"><input type="checkbox" id="lamaRisks" /> Risks explained in patient's language</label>
+    <div class="grid grid-2">
+      <label class="field">Name<input type="text" id="lamaName" /></label>
+      <label class="field">Relationship<input type="text" id="lamaRel" /></label>
+      <label class="field">Witness<input type="text" id="lamaWitness" /></label>
+      <label class="check-row" style="margin-top:18px"><input type="checkbox" id="lamaSign" /> Signature obtained</label>
+    </div>
+  </div>
+  <div class="disp-extra" id="dispTransfer">
+    <div class="sublabel" style="margin-top:0">Transfer</div>
+    <div class="grid grid-2">
+      <label class="field">Receiving facility<input type="text" id="xferFacility" /></label>
+      <label class="field">Reason<input type="text" id="xferReason" /></label>
+      <label class="field">Condition<input type="text" id="xferCondition" /></label>
+      <label class="check-row" style="margin-top:18px"><input type="checkbox" id="xferHandover" /> Handover given</label>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Sign-off <span class="req">Mandatory</span></h2>
+  <div class="grid grid-2">
+    <label class="field">Doctor name *<input type="text" id="docName" /></label>
+    <label class="field">Designation *<input type="text" id="docDesig" /></label>
+    <label class="field">Registration number *<input type="text" id="docReg" /></label>
+    <label class="field">Sign-off time<input type="datetime-local" id="docSignTime" /></label>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" class="btn btn-primary" id="btnLock">Sign &amp; lock</button>
+    <button type="button" class="btn btn-ghost" id="btnUnlock" style="display:none">Unlock</button>
+  </div>
+</section>
+
+<section class="card addendum-card">
+  <h2 class="card-title">Addendum</h2>
+  <label class="field">Addendum text<textarea class="addendum-field" id="addendumText"></textarea></label>
+  <button type="button" class="btn btn-teal" id="btnAddendum" style="margin-top:8px">Add addendum</button>
+  <div id="addendumList" style="margin-top:12px"></div>
+</section>
+
+</main>
+
+<div class="footer-note">
+  Decision-support aid for Emergency Medicine. Not a substitute for clinical judgement.
+  No patient data leaves this device (browser localStorage only). Align with hospital EMR and NABH/JCI policy.
+</div>
+
+<div class="actions-bar">
+  <button type="button" class="btn btn-ghost" id="btnNew">New patient</button>
+  <button type="button" class="btn btn-teal" id="btnValidate">Validate</button>
+  <button type="button" class="btn btn-primary" id="btnGenerate">Generate note</button>
+</div>
+
+<div class="modal-backdrop" id="modalValidate">
+  <div class="modal">
+    <div class="modal-header"><h2>Validation</h2><button type="button" class="btn btn-ghost btn-sm" data-close="modalValidate">Close</button></div>
+    <div class="modal-body"><div id="validationContent"></div></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close="modalValidate">Close</button>
+      <button type="button" class="btn btn-primary" id="btnGenFromValidate">Generate anyway</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalNote">
+  <div class="modal">
+    <div class="modal-header"><h2>Generated clinical note</h2><button type="button" class="btn btn-ghost btn-sm" data-close="modalNote">Close</button></div>
+    <div class="modal-body">
+      <div class="hospital-print-header">
+        <h1>[Hospital Name] — Emergency Department</h1>
+        <p>ED EMR Suite clinical note · NABH-aligned</p>
+      </div>
+      <div class="note-preview" id="notePreview"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="btnCopy">Copy</button>
+      <button type="button" class="btn btn-ghost" id="btnDownload">Download .txt</button>
+      <button type="button" class="btn btn-teal" id="btnPrint">Print</button>
+      <button type="button" class="btn btn-primary" data-close="modalNote">Done</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/scenarios.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
