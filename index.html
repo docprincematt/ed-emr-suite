@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#059669" />
+<title>ED EMR Suite — Emergency Documentation</title>
+<style>
+/* ED EMR Suite — ErMate-inspired */
+:root {
+  --bg: #f0faf6; --bg-soft: #e8f5f0; --card: #ffffff;
+  --border: #b8e0d2; --border-thin: #d4ebe3;
+  --primary: #059669; --primary-dark: #047857; --teal: #0d9488; --teal-soft: #ccfbf1;
+  --text: #0f172a; --muted: #64748b; --label: #475569; --input-bg: #f1f5f9;
+  --danger: #dc2626; --danger-bg: #fef2f2; --warn: #d97706; --warn-bg: #fffbeb;
+  --ok: #059669; --ok-bg: #ecfdf5;
+  --shadow: 0 1px 3px rgba(15,23,42,.06), 0 4px 12px rgba(5,150,105,.06);
+  --radius: 14px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.45;font-size:15px;padding-bottom:100px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border-thin);padding:10px 14px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;box-shadow:0 1px 0 rgba(5,150,105,.08)}
+.topbar h1{margin:0;font-size:1.1rem;font-weight:700;color:var(--primary-dark)}
+.topbar .tagline{font-size:.72rem;color:var(--muted);margin-left:4px}
+.progress-wrap{flex:1;min-width:120px;max-width:240px;margin-left:auto}
+.progress-label{font-size:.68rem;color:var(--muted);margin-bottom:3px;display:flex;justify-content:space-between}
+.progress-bar{height:6px;background:var(--bg-soft);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--primary));border-radius:99px;transition:width .25s}
+.lock-badge{display:none;font-size:.68rem;font-weight:600;background:var(--warn-bg);color:var(--warn);border:1px solid #fcd34d;padding:3px 8px;border-radius:99px}
+.lock-badge.on{display:inline-block}
+.wrap{max-width:960px;margin:0 auto;padding:12px 10px 24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 14px 12px;margin-bottom:10px}
+.card.mandatory-empty{border-color:#fca5a5;box-shadow:0 0 0 2px rgba(220,38,38,.08),var(--shadow)}
+.card-title{margin:0 0 10px;font-size:.92rem;font-weight:700;color:var(--primary-dark);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card-title .req{font-size:.62rem;font-weight:600;color:var(--danger);background:var(--danger-bg);padding:2px 6px;border-radius:99px}
+.card-title .ds{font-size:.62rem;font-weight:600;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:2px 6px;border-radius:99px}
+.grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:640px){.grid-2{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr 1fr 1fr}}
+label.field{display:flex;flex-direction:column;gap:4px;font-size:.7rem;font-weight:600;color:var(--label);text-transform:uppercase;letter-spacing:.03em}
+input[type=text],input[type=number],input[type=datetime-local],input[type=date],input[type=time],select,textarea{
+  font:inherit;font-size:.93rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text);
+  background:var(--input-bg);border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;width:100%;outline:none
+}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.15);background:#fff}
+textarea{min-height:64px;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;border:1px solid var(--border);background:#fff;color:var(--text);font:inherit;font-size:.8rem;padding:7px 11px;border-radius:99px;cursor:pointer;user-select:none;line-height:1.2}
+.chip:hover{border-color:var(--teal)}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+.chip.scenario{padding:10px 14px;font-size:.82rem;border-radius:12px;background:#fff}
+.chip.scenario.active{background:var(--teal);border-color:var(--teal)}
+.chip.triage-red{border-color:#fca5a5}.chip.triage-red.active{background:#dc2626;border-color:#dc2626}
+.chip.triage-orange{border-color:#fdba74}.chip.triage-orange.active{background:#ea580c;border-color:#ea580c}
+.chip.triage-yellow{border-color:#fde047}.chip.triage-yellow.active{background:#ca8a04;border-color:#ca8a04}
+.chip.triage-green{border-color:#86efac}.chip.triage-green.active{background:#16a34a;border-color:#16a34a}
+.chip.score{min-width:40px;text-align:center;padding:6px 10px}
+.chip.tl-green.active{background:#16a34a;border-color:#16a34a}
+.chip.tl-amber.active{background:#d97706;border-color:#d97706}
+.chip.tl-red.active{background:#dc2626;border-color:#dc2626}
+.sublabel{font-size:.76rem;font-weight:600;color:var(--label);margin:8px 0 6px}
+.btn{appearance:none;border:none;font:inherit;font-size:.84rem;font-weight:600;padding:9px 14px;border-radius:10px;cursor:pointer}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-teal{background:var(--teal);color:#fff}.btn-ghost{background:var(--bg-soft);color:var(--primary-dark);border:1px solid var(--border)}
+.btn-sm{padding:6px 10px;font-size:.76rem}
+.btn-now{background:var(--teal-soft);color:var(--teal);border:1px solid #99f6e4;padding:7px 10px;font-size:.74rem;font-weight:700;border-radius:8px;cursor:pointer}
+.ts-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+@media(min-width:560px){.ts-row{grid-template-columns:150px 1fr auto;align-items:center}}
+.ts-label{font-size:.78rem;font-weight:600;color:var(--label)}
+.metric-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.badge{font-size:.76rem;font-weight:600;padding:6px 10px;border-radius:8px;background:var(--ok-bg);color:var(--ok);border:1px solid #a7f3d0}
+.badge.danger{background:var(--danger-bg);color:var(--danger);border-color:#fecaca}
+.badge.warn{background:var(--warn-bg);color:var(--warn);border-color:#fcd34d}
+.alert{display:none;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.84rem;font-weight:600;line-height:1.35}
+.alert.on{display:block}
+.alert.danger{background:var(--danger-bg);color:#991b1b;border:1px solid #fecaca}
+.alert.warn{background:var(--warn-bg);color:#92400e;border:1px solid #fcd34d}
+.alert.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.score-box{margin-top:10px;padding:12px;border-radius:12px;background:var(--ok-bg);border:1px solid #a7f3d0;text-align:center}
+.score-box.mod{background:var(--warn-bg);border-color:#fcd34d}
+.score-box.high,.score-box.danger{background:var(--danger-bg);border-color:#fecaca}
+.score-box .num{font-size:1.8rem;font-weight:800;color:var(--primary-dark);line-height:1}
+.score-box.mod .num,.score-box.mod .band{color:#b45309}
+.score-box.high .num,.score-box.high .band,.score-box.danger .num,.score-box.danger .band{color:#b91c1c}
+.score-box .band{font-size:.9rem;font-weight:700;margin-top:4px}
+.score-box .pathway{font-size:.74rem;color:var(--muted);margin-top:6px;font-weight:500}
+.tx-row{display:grid;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border-thin)}
+.tx-row:last-child{border-bottom:none}
+@media(min-width:640px){.tx-row{grid-template-columns:140px 1fr 1fr auto;align-items:end}}
+.tx-name{font-size:.84rem;font-weight:600;display:flex;align-items:center;gap:6px}
+.tx-name input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary)}
+.disp-extra{display:none;margin-top:12px;padding:12px;background:var(--bg-soft);border-radius:10px;border:1px solid var(--border-thin)}
+.disp-extra.on{display:block}
+.check-row{display:flex;align-items:flex-start;gap:8px;margin:8px 0;font-size:.86rem}
+.check-row input{margin-top:3px;accent-color:var(--primary);width:16px;height:16px;flex-shrink:0}
+.actions-bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border-thin);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:8px;justify-content:center;box-shadow:0 -4px 16px rgba(15,23,42,.06)}
+.actions-bar .btn{flex:1;min-width:100px;max-width:180px}
+.footer-note{max-width:960px;margin:8px auto 0;padding:0 12px 16px;font-size:.7rem;color:var(--muted);text-align:center;line-height:1.4}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:200;align-items:flex-end;justify-content:center;padding:12px}
+.modal-backdrop.on{display:flex}
+@media(min-width:640px){.modal-backdrop{align-items:center}}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:720px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(15,23,42,.25);overflow:hidden}
+.modal-header{padding:14px 16px;border-bottom:1px solid var(--border-thin);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.modal-header h2{margin:0;font-size:1rem;color:var(--primary-dark)}
+.modal-body{padding:16px;overflow-y:auto;flex:1}
+.modal-actions{padding:12px 16px;border-top:1px solid var(--border-thin);display:flex;flex-wrap:wrap;gap:8px}
+.note-preview{font-family:"Segoe UI",Georgia,serif;font-size:.88rem;line-height:1.55;white-space:pre-wrap;background:#fafafa;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#111}
+.validation-list{margin:0;padding-left:18px;color:#991b1b;font-size:.86rem}
+.range-wrap{display:flex;align-items:center;gap:10px}
+.range-wrap input[type=range]{flex:1;accent-color:var(--primary)}
+.range-val{min-width:28px;font-weight:700;color:var(--primary-dark)}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.hidden{display:none!important}
+body.locked .card input:not(.addendum-field),body.locked .card select:not(.addendum-field),body.locked .card textarea:not(.addendum-field),body.locked .card .chip,body.locked .card .btn-now{pointer-events:none;opacity:.75}
+body.locked .addendum-card,body.locked .addendum-card input,body.locked .addendum-card textarea,body.locked .addendum-card .btn{pointer-events:auto;opacity:1}
+.addendum-card{display:none}body.locked .addendum-card{display:block}
+.hospital-print-header{display:none}
+.checklist{display:flex;flex-direction:column;gap:6px}
+.nihss-item{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--border-thin)}
+.nihss-item .lab{flex:1;min-width:140px;font-size:.8rem;font-weight:600}
+@media print{
+  body{background:#fff;padding:0;font-size:11pt}
+  .topbar,.actions-bar,.footer-note,.btn,.chip,.btn-now,.progress-wrap,.lock-badge,#scenarioPickerCard{display:none!important}
+  .wrap{max-width:none;padding:0}.card{display:none!important}
+  .modal-backdrop{display:block!important;position:static;background:none;padding:0}
+  .modal{box-shadow:none;max-height:none;max-width:none;border-radius:0}
+  .modal-header,.modal-actions{display:none!important}.modal-body{padding:0}
+  .note-preview{border:none;background:#fff;padding:0;font-size:11pt}
+  .hospital-print-header{display:block;text-align:center;border-bottom:2px solid #059669;padding-bottom:8px;margin-bottom:16px}
+  .hospital-print-header h1{margin:0;font-size:14pt;color:#047857}
+}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1>ED EMR Suite <span class="tagline">Emergency documentation · NABH-friendly</span></h1>
+  </div>
+  <span class="lock-badge" id="lockBadge">SIGNED &amp; LOCKED</span>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Documentation</span><span id="progressPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</header>
+
+<main class="wrap" id="sharedFields">
+
+<section class="card" id="scenarioPickerCard">
+  <h2 class="card-title">Clinical scenario <span class="req">Select one</span></h2>
+  <div class="scenario-grid chips" id="scenarioGrid"></div>
+</section>
+
+<section class="card" id="card-header">
+  <h2 class="card-title">Patient header <span class="req">Mandatory</span></h2>
+  <div class="grid grid-2">
+    <label class="field">UHID / MRN *<input type="text" id="uhid" placeholder="Hospital UHID" /></label>
+    <label class="field">Full name *<input type="text" id="ptName" placeholder="Patient name" /></label>
+    <label class="field">Age (years) *<input type="number" id="age" min="0" max="120" /></label>
+    <label class="field">Sex *<select id="sex"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+    <label class="field">Arrival date &amp; time *<input type="datetime-local" id="arrival" /></label>
+    <label class="field">MLC *<select id="mlc"><option value="">Select</option><option>No</option><option>Yes</option></select></label>
+  </div>
+  <div class="sublabel">Triage category *</div>
+  <div class="chips" id="triageChips">
+    <button type="button" class="chip triage-red" data-val="Red">Red</button>
+    <button type="button" class="chip triage-orange" data-val="Orange">Orange</button>
+    <button type="button" class="chip triage-yellow" data-val="Yellow">Yellow</button>
+    <button type="button" class="chip triage-green" data-val="Green">Green</button>
+  </div>
+  <input type="hidden" id="triage" value="" />
+  <div class="sublabel">Allergies *</div>
+  <div class="chips" style="margin-bottom:8px"><button type="button" class="chip" id="nkdaChip">NKDA</button></div>
+  <label class="field">Allergy details<input type="text" id="allergies" placeholder="Or leave blank if NKDA" /></label>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Shared timestamps</h2>
+  <div class="ts-row"><span class="ts-label">Doctor seen</span><input type="datetime-local" id="tsDoctor" /><button type="button" class="btn-now" data-ts="tsDoctor">Now</button></div>
+  <div class="ts-row"><span class="ts-label">Decision time</span><input type="datetime-local" id="tsDecision" /><button type="button" class="btn-now" data-ts="tsDecision">Now</button></div>
+  <div class="ts-row"><span class="ts-label">Disposition time</span><input type="datetime-local" id="tsDisposition" /><button type="button" class="btn-now" data-ts="tsDisposition">Now</button></div>
+  <div class="metric-badges" id="doorMetrics"></div>
+</section>
+
+<section class="card hidden" id="scenarioTimestamps"></section>
+
+<section class="card">
+  <h2 class="card-title">Vitals</h2>
+  <div class="grid grid-3">
+    <label class="field">HR (/min)<input type="number" id="hr" /></label>
+    <label class="field">BP right (mmHg)<input type="text" id="bpRight" placeholder="140/90" /></label>
+    <label class="field">BP left (mmHg)<input type="text" id="bpLeft" placeholder="138/88" /></label>
+    <label class="field">RR (/min)<input type="number" id="rr" /></label>
+    <label class="field">SpO₂ (%)<input type="number" id="spo2" /></label>
+    <label class="field">Temp (°C)<input type="number" id="temp" step="0.1" /></label>
+    <label class="field">GCS<input type="text" id="gcs" placeholder="E4V5M6" /></label>
+    <label class="field">CBG (mg/dL)<input type="number" id="cbg" /></label>
+    <label class="field">Pain 0–10
+      <div class="range-wrap"><input type="range" id="pain" min="0" max="10" value="0" /><span class="range-val" id="painVal">0</span></div>
+    </label>
+  </div>
+  <div class="alert danger" id="bpDiffAlert"></div>
+</section>
+
+<section class="card">
+  <h2 class="card-title" id="scenarioTitle">Scenario details</h2>
+  <div id="scenarioBody"><p style="color:var(--muted);margin:0">Select a clinical scenario above to load its template.</p></div>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Treatment given (shared)</h2>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txAspChk" /> Aspirin</div>
+    <label class="field">Dose<input type="text" id="txAspDose" placeholder="e.g. 325 mg" /></label>
+    <label class="field">Time<input type="datetime-local" id="txAspTime" /></label>
+    <button type="button" class="btn-now" data-ts="txAspTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txP2yChk" /> Clopidogrel / Ticagrelor</div>
+    <label class="field">Dose<input type="text" id="txP2yDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txP2yTime" /></label>
+    <button type="button" class="btn-now" data-ts="txP2yTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txAcChk" /> Anticoagulant</div>
+    <label class="field">Dose<input type="text" id="txAcDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txAcTime" /></label>
+    <button type="button" class="btn-now" data-ts="txAcTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txNitChk" /> Nitrate</div>
+    <label class="field">Dose<input type="text" id="txNitDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txNitTime" /></label>
+    <button type="button" class="btn-now" data-ts="txNitTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txAnalChk" /> Analgesia</div>
+    <label class="field">Dose<input type="text" id="txAnalDose" placeholder="dose" /></label>
+    <label class="field">Time<input type="datetime-local" id="txAnalTime" /></label>
+    <button type="button" class="btn-now" data-ts="txAnalTime">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txO2Chk" /> Oxygen</div>
+    <label class="field">Dose<input type="text" id="txO2Dose" placeholder="device/flow" /></label>
+    <label class="field">Time<input type="datetime-local" id="txO2Time" /></label>
+    <button type="button" class="btn-now" data-ts="txO2Time">Now</button>
+  </div>
+  <div class="tx-row">
+    <div class="tx-name"><input type="checkbox" id="txOthChk" /> Other</div>
+    <label class="field">Dose<input type="text" id="txOthDose" placeholder="details" /></label>
+    <label class="field">Time<input type="datetime-local" id="txOthTime" /></label>
+    <button type="button" class="btn-now" data-ts="txOthTime">Now</button>
+  </div>
+
+  <label class="field" style="margin-top:10px">Additional impression / plan<textarea id="dxText" placeholder="Free-text impression…"></textarea></label>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Disposition</h2>
+  <div class="chips" data-chip-id="disposition" data-multi="false">
+    <button type="button" class="chip" data-val="Admit CCU">Admit CCU</button>
+    <button type="button" class="chip" data-val="Admit ward">Admit ward</button>
+    <button type="button" class="chip" data-val="Cath lab">Cath lab</button>
+    <button type="button" class="chip" data-val="Observation">Observation</button>
+    <button type="button" class="chip" data-val="Discharge">Discharge</button>
+    <button type="button" class="chip" data-val="LAMA/DAMA">LAMA/DAMA</button>
+    <button type="button" class="chip" data-val="Referred/transferred">Referred/transferred</button>
+    <button type="button" class="chip" data-val="Death">Death</button>
+  </div>
+  <div class="alert warn" id="dispWarn"></div>
+  <div class="disp-extra" id="dispDischarge">
+    <div class="sublabel" style="margin-top:0">Discharge checklist</div>
+    <label class="check-row"><input type="checkbox" id="dcPrecautions" /> Return precautions advised</label>
+    <label class="check-row"><input type="checkbox" id="dcFollowup" /> Follow-up plan documented</label>
+    <label class="check-row"><input type="checkbox" id="dcInstructions" /> Instructions given</label>
+    <label class="field">Detail<textarea id="dcDetail"></textarea></label>
+  </div>
+  <div class="disp-extra" id="dispLama">
+    <div class="sublabel" style="margin-top:0">LAMA / DAMA</div>
+    <label class="check-row"><input type="checkbox" id="lamaRisks" /> Risks explained in patient's language</label>
+    <div class="grid grid-2">
+      <label class="field">Name<input type="text" id="lamaName" /></label>
+      <label class="field">Relationship<input type="text" id="lamaRel" /></label>
+      <label class="field">Witness<input type="text" id="lamaWitness" /></label>
+      <label class="check-row" style="margin-top:18px"><input type="checkbox" id="lamaSign" /> Signature obtained</label>
+    </div>
+  </div>
+  <div class="disp-extra" id="dispTransfer">
+    <div class="sublabel" style="margin-top:0">Transfer</div>
+    <div class="grid grid-2">
+      <label class="field">Receiving facility<input type="text" id="xferFacility" /></label>
+      <label class="field">Reason<input type="text" id="xferReason" /></label>
+      <label class="field">Condition<input type="text" id="xferCondition" /></label>
+      <label class="check-row" style="margin-top:18px"><input type="checkbox" id="xferHandover" /> Handover given</label>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Sign-off <span class="req">Mandatory</span></h2>
+  <div class="grid grid-2">
+    <label class="field">Doctor name *<input type="text" id="docName" /></label>
+    <label class="field">Designation *<input type="text" id="docDesig" /></label>
+    <label class="field">Registration number *<input type="text" id="docReg" /></label>
+    <label class="field">Sign-off time<input type="datetime-local" id="docSignTime" /></label>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" class="btn btn-primary" id="btnLock">Sign &amp; lock</button>
+    <button type="button" class="btn btn-ghost" id="btnUnlock" style="display:none">Unlock</button>
+  </div>
+</section>
+
+<section class="card addendum-card">
+  <h2 class="card-title">Addendum</h2>
+  <label class="field">Addendum text<textarea class="addendum-field" id="addendumText"></textarea></label>
+  <button type="button" class="btn btn-teal" id="btnAddendum" style="margin-top:8px">Add addendum</button>
+  <div id="addendumList" style="margin-top:12px"></div>
+</section>
+
+</main>
+
+<div class="footer-note">
+  Decision-support aid for Emergency Medicine. Not a substitute for clinical judgement.
+  No patient data leaves this device (browser localStorage only). Align with hospital EMR and NABH/JCI policy.
+</div>
+
+<div class="actions-bar">
+  <button type="button" class="btn btn-ghost" id="btnNew">New patient</button>
+  <button type="button" class="btn btn-teal" id="btnValidate">Validate</button>
+  <button type="button" class="btn btn-primary" id="btnGenerate">Generate note</button>
+</div>
+
+<div class="modal-backdrop" id="modalValidate">
+  <div class="modal">
+    <div class="modal-header"><h2>Validation</h2><button type="button" class="btn btn-ghost btn-sm" data-close="modalValidate">Close</button></div>
+    <div class="modal-body"><div id="validationContent"></div></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close="modalValidate">Close</button>
+      <button type="button" class="btn btn-primary" id="btnGenFromValidate">Generate anyway</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalNote">
+  <div class="modal">
+    <div class="modal-header"><h2>Generated clinical note</h2><button type="button" class="btn btn-ghost btn-sm" data-close="modalNote">Close</button></div>
+    <div class="modal-body">
+      <div class="hospital-print-header">
+        <h1>[Hospital Name] — Emergency Department</h1>
+        <p>ED EMR Suite clinical note · NABH-aligned</p>
+      </div>
+      <div class="note-preview" id="notePreview"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="btnCopy">Copy</button>
+      <button type="button" class="btn btn-ghost" id="btnDownload">Download .txt</button>
+      <button type="button" class="btn btn-teal" id="btnPrint">Print</button>
+      <button type="button" class="btn btn-primary" data-close="modalNote">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ED EMR Suite — scenario modules (decision support) */
+window.ED_SCENARIOS = [];
+
+function scChip(id, label, opts, multi) {
+  return { type: 'chips', id: id, label: label, multi: !!multi, options: opts };
+}
+function scText(id, label, ph, kind) {
+  return { type: kind || 'text', id: id, label: label, placeholder: ph || '' };
+}
+function scArea(id, label, ph) {
+  return { type: 'textarea', id: id, label: label, placeholder: ph || '' };
+}
+function scNum(id, label, ph) {
+  return { type: 'number', id: id, label: label, placeholder: ph || '' };
+}
+function scSelect(id, label, opts) {
+  return { type: 'select', id: id, label: label, options: opts };
+}
+function scCheck(id, label) {
+  return { type: 'check', id: id, label: label };
+}
+function scScore(id, label, items) {
+  return { type: 'score-group', id: id, label: label, items: items };
+}
+function scInfo(html) {
+  return { type: 'info', html: html };
+}
+function scChecklist(id, label, items) {
+  return { type: 'checklist', id: id, label: label, items: items };
+}
+function o(v, l) { return { value: v, label: l || v }; }
+
+/* ========== 1. CHEST PAIN / ACS ========== */
+window.ED_SCENARIOS.push({
+  id: 'chest-pain',
+  title: 'Chest pain / ACS',
+  short: 'Chest pain',
+  extraTs: [
+    { id: 'tsEcgDone', label: 'ECG done' },
+    { id: 'tsEcgRead', label: 'ECG read' },
+    { id: 'tsTrop', label: 'Troponin sent' },
+    { id: 'tsCardio', label: 'Cardiology informed' }
+  ],
+  sections: [
+    scChip('cp_onset', 'Onset', [o('Sudden'), o('Gradual')]),
+    scText('cp_duration', 'Duration', 'e.g. 2 hours'),
+    scChip('cp_character', 'Character', [o('Pressure'), o('Heaviness'), o('Tightness'), o('Burning'), o('Sharp'), o('Tearing'), o('Pleuritic')], true),
+    scChip('cp_radiation', 'Radiation', [o('Left arm'), o('Jaw'), o('Back'), o('Right arm'), o('None')], true),
+    scChip('cp_assoc', 'Associated', [o('Sweating'), o('Nausea/vomiting'), o('Breathlessness'), o('Palpitations'), o('Syncope'), o('Epigastric pain'), o('Unilateral leg swelling')], true),
+    scChip('cp_risks', 'Risk factors', [o('DM'), o('HTN'), o('Smoker'), o('Dyslipidaemia'), o('Family hx premature CAD'), o('Known CAD / prior PCI/CABG'), o('Obesity'), o('CKD')], true),
+    scChip('cp_ecg', 'ECG findings', [o('Normal sinus'), o('STEMI'), o('New LBBB'), o('ST depression'), o('T inversion'), o('AF'), o('Other')], true),
+    scSelect('cp_stemi_terr', 'STEMI territory', ['', 'Anterior (V1–V4)', 'Inferior (II, III, aVF)', 'Lateral (I, aVL, V5–V6)', 'Posterior', 'Right ventricular', 'Extensive anterior', 'Other / multi-territory']),
+    scText('cp_trop0', 'Troponin 0h', 'value'),
+    scChip('cp_trop0s', 'Troponin 0h status', [o('Normal'), o('Elevated'), o('Pending')]),
+    scText('cp_tropR', 'Troponin repeat', 'value'),
+    scChip('cp_tropRs', 'Troponin repeat status', [o('Normal'), o('Elevated'), o('Pending'), o('Not done')]),
+    scScore('heart', 'HEART score', [
+      { id: 'H', label: 'History (H)', opts: '0 Slightly · 1 Moderately · 2 Highly suspicious' },
+      { id: 'E', label: 'ECG (E)', opts: '0 Normal · 1 Nonspecific repol · 2 Significant ST deviation' },
+      { id: 'A', label: 'Age (A)', opts: '0 <45 · 1 45–64 · 2 ≥65' },
+      { id: 'R', label: 'Risk factors (R)', opts: '0 None · 1 1–2 · 2 ≥3 or known atherosclerosis' },
+      { id: 'T', label: 'Troponin (T)', opts: '0 ≤NL · 1 1–3× · 2 >3×' }
+    ]),
+    scSelect('cp_dx', 'Impression', ['', 'ACS — STEMI', 'ACS — NSTEMI', 'ACS — Unstable angina', 'Stable angina', 'Non-cardiac chest pain', 'Aortic dissection (suspected / confirmed)', 'Pulmonary embolism (suspected / confirmed)', 'Other']),
+    scArea('cp_notes', 'Notes', 'Additional HPI / plan')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    var ch = g('cp_character') || [];
+    var rad = g('cp_radiation') || [];
+    var as = g('cp_assoc') || [];
+    if (ch.indexOf('Tearing') >= 0 || (rad.indexOf('Back') >= 0 && ch.indexOf('Tearing') >= 0))
+      flags.push('Red flag: consider aortic dissection.');
+    if (ch.indexOf('Pleuritic') >= 0 && (as.indexOf('Breathlessness') >= 0 || as.indexOf('Unilateral leg swelling') >= 0))
+      flags.push('Red flag: consider PE.');
+    var ecg = g('cp_ecg') || [];
+    if (ecg.indexOf('STEMI') >= 0 || ecg.indexOf('New LBBB') >= 0)
+      flags.push('STEMI pathway: activate cath lab / thrombolysis per protocol.');
+    // HEART auto A/R
+    var age = parseInt(S.age, 10);
+    if (!isNaN(age) && S._autoHeartA !== false) {
+      S.scores = S.scores || {};
+      S.scores.heart = S.scores.heart || {};
+      S.scores.heart.A = age < 45 ? 0 : (age < 65 ? 1 : 2);
+    }
+    var risks = g('cp_risks') || [];
+    if (S._autoHeartR !== false) {
+      S.scores = S.scores || {};
+      S.scores.heart = S.scores.heart || {};
+      var known = risks.indexOf('Known CAD / prior PCI/CABG') >= 0;
+      S.scores.heart.R = (known || risks.length >= 3) ? 2 : (risks.length >= 1 ? 1 : 0);
+    }
+    var hs = S.scores && S.scores.heart ? S.scores.heart : {};
+    var parts = ['H', 'E', 'A', 'R', 'T'].map(function (k) { return hs[k]; });
+    var total = null, band = '', cls = '', pathway = '';
+    if (parts.every(function (x) { return x === 0 || x === 1 || x === 2; })) {
+      total = parts.reduce(function (a, b) { return a + b; }, 0);
+      if (total <= 3) { band = 'Low (~1.7% MACE)'; cls = ''; pathway = 'Early discharge pathway may be considered.'; }
+      else if (total <= 6) { band = 'Moderate (~16.6% MACE)'; cls = 'mod'; pathway = 'Observation / serial troponin / consider admit.'; }
+      else { band = 'High (~50–65% MACE)'; cls = 'high'; pathway = 'Early invasive / CCU / cardiology.'; }
+    }
+    var metrics = [];
+    if (S.arrival && S.tsEcgDone) {
+      var m = Math.round((new Date(S.tsEcgDone) - new Date(S.arrival)) / 60000);
+      if (!isNaN(m)) metrics.push({ text: 'Door-to-ECG: ' + m + ' min', danger: m > 10 });
+    }
+    return {
+      flags: flags,
+      scores: [{ id: 'heart', title: 'HEART', total: total, band: band, cls: cls,
+        pathway: pathway + ' Decision support — clinical judgement prevails.' }],
+      metrics: metrics,
+      dischargeWarn: (total != null && total >= 4) || (g('cp_trop0s') || []).indexOf('Elevated') >= 0 ||
+        (ecg.indexOf('STEMI') >= 0 || ecg.indexOf('New LBBB') >= 0)
+    };
+  },
+  note: function (S, g, join) {
+    var L = [];
+    L.push('SCENARIO: Chest pain / ACS');
+    L.push('Onset: ' + join(g('cp_onset')) + '; Duration: ' + (S.cp_duration || '—'));
+    L.push('Character: ' + join(g('cp_character')));
+    L.push('Radiation: ' + join(g('cp_radiation')));
+    L.push('Associated: ' + join(g('cp_assoc')));
+    L.push('Risk factors: ' + join(g('cp_risks')));
+    L.push('ECG: ' + join(g('cp_ecg')) + (S.cp_stemi_terr ? ' — ' + S.cp_stemi_terr : ''));
+    L.push('Troponin 0h: ' + (S.cp_trop0 || '—') + ' (' + join(g('cp_trop0s')) + ')');
+    L.push('Troponin repeat: ' + (S.cp_tropR || '—') + ' (' + join(g('cp_tropRs')) + ')');
+    var hs = (S.scores && S.scores.heart) || {};
+    if (['H','E','A','R','T'].every(function(k){ return hs[k]===0||hs[k]===1||hs[k]===2; })) {
+      var t = hs.H+hs.E+hs.A+hs.R+hs.T;
+      L.push('HEART: H'+hs.H+' E'+hs.E+' A'+hs.A+' R'+hs.R+' T'+hs.T+' = '+t+' (decision support — clinical judgement prevails)');
+    }
+    L.push('Impression: ' + (S.cp_dx || '—'));
+    if (S.cp_notes) L.push(S.cp_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 2. TRAUMA ATLS ========== */
+window.ED_SCENARIOS.push({
+  id: 'trauma',
+  title: 'Trauma (ATLS)',
+  short: 'Trauma',
+  extraTs: [
+    { id: 'tsPrimary', label: 'Primary survey done' },
+    { id: 'tsEfast', label: 'eFAST done' },
+    { id: 'tsSecondary', label: 'Secondary survey' },
+    { id: 'tsPolice', label: 'Police informed' }
+  ],
+  sections: [
+    scChip('tr_mech', 'Mechanism', [o('RTA / MVC'), o('Two-wheeler'), o('Fall from height'), o('Assault'), o('Penetrating'), o('Blast'), o('Crush'), o('Other')], true),
+    scArea('tr_mist', 'MIST handover', 'Mechanism / Injuries / Signs / Treatment given'),
+    scChip('tr_cabcde', 'Primary survey issues (cABCDE)', [o('Catastrophic haemorrhage'), o('Airway threat'), o('Breathing compromise'), o('Circulation shock'), o('Disability (neuro)'), o('Exposure / environment')], true),
+    scChip('tr_interv', 'Interventions', [o('C-spine protection'), o('Airway adjunct / intubation'), o('Needle decompression'), o('Chest drain'), o('IV/IO access'), o('Pelvic binder'), o('Tourniquet'), o('Blood products'), o('TXA')], true),
+    scSelect('tr_ge', 'GCS Eye (E)', ['', '4 Spontaneous', '3 To speech', '2 To pain', '1 None']),
+    scSelect('tr_gv', 'GCS Verbal (V)', ['', '5 Oriented', '4 Confused', '3 Words', '2 Sounds', '1 None', 'T Tube']),
+    scSelect('tr_gm', 'GCS Motor (M)', ['', '6 Obeys', '5 Localises', '4 Withdraws', '3 Flexion', '2 Extension', '1 None']),
+    scChip('tr_efast', 'eFAST', [o('Negative'), o('RUQ +'), o('LUQ +'), o('Pelvis +'), o('Pericardial +'), o('Lung sliding absent (PTX)'), o('Not done')], true),
+    scChip('tr_secondary', 'Secondary survey findings', [o('Head/face injury'), o('C-spine tenderness'), o('Chest injury'), o('Abdomen tender'), o('Pelvis unstable'), o('Long bone fracture'), o('Open fracture'), o('Neuro deficit'), o('Burns')], true),
+    scNum('tr_weight', 'Estimated weight (kg)', 'for TXA / drugs'),
+    scChip('tr_tetanus', 'Tetanus', [o('Up to date'), o('Booster given'), o('Ig indicated'), o('Unknown')]),
+    scChip('tr_mlc', 'MLC / police', [o('MLC registered'), o('Police intimated'), o('Brought dead MLC'), o('Not applicable')], true),
+    scArea('tr_notes', 'Notes', 'Injuries detail / plan')
+  ],
+  compute: function (S, g) {
+    function gcsPart(sel, n) {
+      if (!sel) return null;
+      var m = String(sel).match(/^(\d+)/);
+      return m ? parseInt(m[1], 10) : null;
+    }
+    var E = gcsPart(S.tr_ge), V = gcsPart(S.tr_gv), M = gcsPart(S.tr_gm);
+    var total = (E != null && V != null && M != null) ? E + V + M : null;
+    var hr = parseFloat(S.hr), sbp = null;
+    if (S.bpRight) { var mm = String(S.bpRight).match(/(\d+)/); if (mm) sbp = parseFloat(mm[1]); }
+    var si = (hr && sbp) ? (hr / sbp) : null;
+    var flags = [];
+    if (total != null && total <= 8) flags.push('GCS ≤8 — protect airway / consider intubation.');
+    if (si != null && si >= 0.9) flags.push('Shock index ≥0.9 — occult shock possible.');
+    var cab = g('tr_cabcde') || [];
+    if (cab.indexOf('Catastrophic haemorrhage') >= 0) flags.push('Control haemorrhage / TXA / blood products.');
+    return {
+      flags: flags,
+      scores: [
+        { id: 'gcs', title: 'GCS', total: total, band: total == null ? '' : ('E' + E + 'V' + V + 'M' + M), cls: total != null && total <= 8 ? 'high' : '', pathway: 'Decision support — clinical judgement prevails.' },
+        { id: 'si', title: 'Shock index (HR/SBP)', total: si != null ? Math.round(si * 100) / 100 : null, band: si == null ? '' : (si >= 0.9 ? 'Elevated' : 'Normal range'), cls: si != null && si >= 0.9 ? 'mod' : '', pathway: 'Decision support — clinical judgement prevails.' }
+      ]
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: Trauma (ATLS)'];
+    L.push('Mechanism: ' + join(g('tr_mech')));
+    if (S.tr_mist) L.push('MIST: ' + S.tr_mist);
+    L.push('Primary (cABCDE): ' + join(g('tr_cabcde')));
+    L.push('Interventions: ' + join(g('tr_interv')));
+    L.push('GCS: ' + (S.tr_ge || '—') + ' / ' + (S.tr_gv || '—') + ' / ' + (S.tr_gm || '—'));
+    L.push('eFAST: ' + join(g('tr_efast')));
+    L.push('Secondary: ' + join(g('tr_secondary')));
+    L.push('Tetanus: ' + join(g('tr_tetanus')));
+    L.push('MLC/Police: ' + join(g('tr_mlc')));
+    if (S.tr_notes) L.push(S.tr_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 3. SEPSIS ========== */
+window.ED_SCENARIOS.push({
+  id: 'sepsis',
+  title: 'Sepsis',
+  short: 'Sepsis',
+  extraTs: [
+    { id: 'tsCultures', label: 'Cultures taken' },
+    { id: 'tsAbx', label: 'Antibiotics given' },
+    { id: 'tsFluids', label: 'Fluids started' },
+    { id: 'tsLactate', label: 'Lactate sent' }
+  ],
+  sections: [
+    scChip('sep_source', 'Suspected source', [o('Respiratory'), o('Urinary'), o('Intra-abdominal'), o('Skin/soft tissue'), o('CNS'), o('Line/device'), o('Unknown'), o('Other')], true),
+    scChip('sep_qsofa', 'qSOFA criteria', [o('RR ≥22'), o('Altered mentation'), o('SBP ≤100')], true),
+    scChip('sep_sirs', 'SIRS criteria', [o('Temp >38 or <36'), o('HR >90'), o('RR >20'), o('WBC >12 or <4')], true),
+    scNum('sep_weight', 'Weight (kg)', 'for 30 ml/kg fluids'),
+    scNum('sep_lact0', 'Lactate 0h (mmol/L)', ''),
+    scNum('sep_lactR', 'Lactate repeat', ''),
+    scChip('sep_cultures', 'Cultures before antibiotics', [o('Yes'), o('No — delayed'), o('Not obtained')]),
+    scText('sep_abx', 'Antibiotic(s) given', 'drug / dose'),
+    scChecklist('sep_bundle', 'Hour-1 bundle', [
+      { id: 'b_lact', label: 'Lactate measured' },
+      { id: 'b_cult', label: 'Blood cultures before antibiotics' },
+      { id: 'b_abx', label: 'Broad-spectrum antibiotics' },
+      { id: 'b_fluid', label: '30 ml/kg crystalloid if hypotensive / lactate ≥4' },
+      { id: 'b_vaso', label: 'Vasopressors if needed (MAP ≥65)' }
+    ]),
+    scChip('sep_source_ctrl', 'Source control', [o('Not required'), o('Planned'), o('Done'), o('Not possible now')]),
+    scArea('sep_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var q = (g('sep_qsofa') || []).length;
+    var s = (g('sep_sirs') || []).length;
+    var w = parseFloat(S.sep_weight);
+    var fluid = (!isNaN(w)) ? Math.round(w * 30) : null;
+    var flags = [];
+    if (q >= 2) flags.push('qSOFA ≥2 — high risk of poor outcome; escalate.');
+    if (S.tsAbx && S.arrival) {
+      var m = Math.round((new Date(S.tsAbx) - new Date(S.arrival)) / 60000);
+      if (!isNaN(m) && m > 60) flags.push('Time-to-antibiotic ' + m + ' min — exceeds 60 min target.');
+    }
+    var lac = parseFloat(S.sep_lact0);
+    if (!isNaN(lac) && lac >= 4) flags.push('Lactate ≥4 — aggressive resuscitation / reassess.');
+    return {
+      flags: flags,
+      scores: [
+        { id: 'qsofa', title: 'qSOFA', total: q, band: q >= 2 ? 'Positive (≥2)' : 'Negative', cls: q >= 2 ? 'high' : '', pathway: 'Decision support — clinical judgement prevails.' },
+        { id: 'sirs', title: 'SIRS', total: s, band: s >= 2 ? '≥2 criteria' : '<2', cls: s >= 2 ? 'mod' : '', pathway: 'Decision support — clinical judgement prevails.' },
+        { id: 'fluid', title: '30 ml/kg fluid target', total: fluid, band: fluid != null ? (fluid + ' ml') : 'Enter weight', cls: '', pathway: 'Crystalloid target if indicated — clinical judgement prevails.' }
+      ],
+      metrics: (S.arrival && S.tsAbx) ? (function () {
+        var m = Math.round((new Date(S.tsAbx) - new Date(S.arrival)) / 60000);
+        return isNaN(m) ? [] : [{ text: 'Door-to-antibiotic: ' + m + ' min', danger: m > 60 }];
+      })() : []
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: Sepsis'];
+    L.push('Source: ' + join(g('sep_source')));
+    L.push('qSOFA: ' + join(g('sep_qsofa')));
+    L.push('SIRS: ' + join(g('sep_sirs')));
+    L.push('Weight: ' + (S.sep_weight || '—') + ' kg; 30 ml/kg ≈ ' + (S.sep_weight ? Math.round(parseFloat(S.sep_weight) * 30) + ' ml' : '—'));
+    L.push('Lactate 0h / repeat: ' + (S.sep_lact0 || '—') + ' / ' + (S.sep_lactR || '—'));
+    L.push('Cultures before Abx: ' + join(g('sep_cultures')));
+    L.push('Antibiotics: ' + (S.sep_abx || '—'));
+    L.push('Source control: ' + join(g('sep_source_ctrl')));
+    if (S.sep_notes) L.push(S.sep_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 4. SHORTNESS OF BREATH ========== */
+window.ED_SCENARIOS.push({
+  id: 'sob',
+  title: 'Shortness of breath',
+  short: 'SOB',
+  extraTs: [
+    { id: 'tsAbg', label: 'ABG done' },
+    { id: 'tsNiv', label: 'NIV started' }
+  ],
+  sections: [
+    scChip('sob_dx', 'Working diagnosis chips', [o('Asthma'), o('COPD'), o('Pulmonary oedema'), o('PE'), o('Pneumonia'), o('Pneumothorax'), o('Metabolic acidosis'), o('Anxiety'), o('Other')], true),
+    scNum('sob_peak', 'Peak flow (L/min)', ''),
+    scNum('sob_peak_pred', 'Predicted peak flow', ''),
+    scChip('sob_curb', 'CURB-65', [o('Confusion'), o('Urea >7 mmol/L (BUN >19)'), o('RR ≥30'), o('BP SBP<90 or DBP≤60'), o('Age ≥65')], true),
+    scChip('sob_wells', 'Wells PE criteria (selected)', [o('Clinical DVT signs (+3)'), o('PE most likely (+3)'), o('HR >100 (+1.5)'), o('Immobilisation/surgery 4 wk (+1.5)'), o('Previous DVT/PE (+1.5)'), o('Haemoptysis (+1)'), o('Malignancy (+1)')], true),
+    scChip('sob_perc', 'PERC rule (all must be true to rule out)', [o('Age <50'), o('HR <100'), o('SpO₂ ≥95%'), o('No haemoptysis'), o('No oestrogen'), o('No prior DVT/PE'), o('No unilateral leg swelling'), o('No surgery/trauma 4 wk')], true),
+    scText('sob_abg', 'ABG', 'pH / PaCO₂ / PaO₂ / HCO₃ / Lac'),
+    scChip('sob_airway', 'Airway support', [o('Room air / NC'), o('Face mask O₂'), o('NIV / BiPAP'), o('HFNC'), o('Intubated')], true),
+    scArea('sob_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var curb = (g('sob_curb') || []).length;
+    var wellsMap = {
+      'Clinical DVT signs (+3)': 3, 'PE most likely (+3)': 3, 'HR >100 (+1.5)': 1.5,
+      'Immobilisation/surgery 4 wk (+1.5)': 1.5, 'Previous DVT/PE (+1.5)': 1.5,
+      'Haemoptysis (+1)': 1, 'Malignancy (+1)': 1
+    };
+    var wells = 0;
+    (g('sob_wells') || []).forEach(function (x) { wells += wellsMap[x] || 0; });
+    var perc = (g('sob_perc') || []).length;
+    var flags = [];
+    if (curb >= 3) flags.push('CURB-65 ≥3 — consider ICU / senior review.');
+    if (wells > 4) flags.push('Wells PE score >4 — PE likely; consider imaging / therapy.');
+    if (perc === 8) flags.push('PERC negative (all 8) — PE unlikely if low pretest probability.');
+    return {
+      flags: flags,
+      scores: [
+        { id: 'curb', title: 'CURB-65', total: curb, band: curb <= 1 ? 'Low' : (curb === 2 ? 'Moderate' : 'High'), cls: curb >= 3 ? 'high' : (curb === 2 ? 'mod' : ''), pathway: 'Decision support — clinical judgement prevails.' },
+        { id: 'wells', title: 'Wells PE', total: wells, band: wells <= 4 ? 'PE unlikely' : 'PE likely', cls: wells > 4 ? 'mod' : '', pathway: 'Decision support — clinical judgement prevails.' },
+        { id: 'perc', title: 'PERC criteria met', total: perc, band: perc + '/8', cls: '', pathway: 'Decision support — clinical judgement prevails.' }
+      ]
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: Shortness of breath'];
+    L.push('Dx chips: ' + join(g('sob_dx')));
+    L.push('Peak flow: ' + (S.sob_peak || '—') + ' (predicted ' + (S.sob_peak_pred || '—') + ')');
+    L.push('CURB-65: ' + join(g('sob_curb')));
+    L.push('Wells PE: ' + join(g('sob_wells')));
+    L.push('PERC: ' + join(g('sob_perc')));
+    L.push('ABG: ' + (S.sob_abg || '—'));
+    L.push('Airway support: ' + join(g('sob_airway')));
+    if (S.sob_notes) L.push(S.sob_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 5. STROKE / TIA ========== */
+window.ED_SCENARIOS.push({
+  id: 'stroke',
+  title: 'Stroke / TIA',
+  short: 'Stroke',
+  extraTs: [
+    { id: 'tsLkw', label: 'Last known well' },
+    { id: 'tsCt', label: 'CT done' },
+    { id: 'tsThrombolysis', label: 'Thrombolysis decision' }
+  ],
+  sections: [
+    scChip('st_type', 'Presentation', [o('Ischaemic stroke suspected'), o('Haemorrhagic suspected'), o('TIA'), o('Stroke mimic')]),
+    scInfo('<span class="badge">Enter Last known well in Timestamps section (scenario stamp)</span>'),
+    scNum('st_cbg', 'CBG (mg/dL)', ''),
+    scChip('st_nihss_quick', 'NIHSS domains (score each below)', [o('Completed full NIHSS')], true),
+    { type: 'nihss', id: 'nihss' },
+    scChecklist('st_contra', 'Thrombolysis absolute/relative contraindications (tick if present)', [
+      { id: 'c_bleed', label: 'Active internal bleeding / bleeding diathesis' },
+      { id: 'c_ich', label: 'Prior ICH / intracranial neoplasm / AVM' },
+      { id: 'c_surg', label: 'Recent major surgery / trauma / LP' },
+      { id: 'c_bp', label: 'Uncontrolled BP (>185/110) despite Rx' },
+      { id: 'c_plt', label: 'Platelets <100k / INR >1.7 / on DOAC' },
+      { id: 'c_stroke', label: 'Prior stroke within 3 months' },
+      { id: 'c_glucose', label: 'Glucose <50 mg/dL' }
+    ]),
+    scChip('st_abcd2', 'ABCD² (TIA)', [o('Age ≥60 (+1)'), o('BP ≥140/90 (+1)'), o('Clinical unilateral weakness (+2)'), o('Clinical speech without weakness (+1)'), o('Duration ≥60 min (+2)'), o('Duration 10–59 min (+1)'), o('Diabetes (+1)')], true),
+    scArea('st_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    var lkw = S.tsLkw || S.st_lkw;
+    var metrics = [];
+    if (lkw) {
+      var mins = Math.round((Date.now() - new Date(lkw).getTime()) / 60000);
+      if (!isNaN(mins)) {
+        var hrs = (mins / 60).toFixed(1);
+        metrics.push({ text: 'Time since LKW: ' + hrs + ' h (' + mins + ' min)', danger: mins > 270 });
+        if (mins <= 270) flags.push('Within typical thrombolysis window (≤4.5 h) — confirm eligibility.');
+        else flags.push('Outside 4.5 h window from LKW — consider EVT eligibility / imaging.');
+      }
+    }
+    if (S.arrival && S.tsCt) {
+      var m = Math.round((new Date(S.tsCt) - new Date(S.arrival)) / 60000);
+      if (!isNaN(m)) metrics.push({ text: 'Door-to-CT: ' + m + ' min', danger: m > 25 });
+    }
+    var nihss = 0, nihssOk = true;
+    var items = ['loc','locq','locc','gaze','visual','facial','motorLarm','motorRarm','motorLleg','motorRleg','ataxia','sensory','language','dysarthria','neglect'];
+    items.forEach(function (k) {
+      var v = S['nihss_' + k];
+      if (v === '' || v == null) nihssOk = false;
+      else nihss += parseInt(v, 10) || 0;
+    });
+    var abcdMap = {
+      'Age ≥60 (+1)': 1, 'BP ≥140/90 (+1)': 1, 'Clinical unilateral weakness (+2)': 2,
+      'Clinical speech without weakness (+1)': 1, 'Duration ≥60 min (+2)': 2,
+      'Duration 10–59 min (+1)': 1, 'Diabetes (+1)': 1
+    };
+    var abcd = 0;
+    (g('st_abcd2') || []).forEach(function (x) { abcd += abcdMap[x] || 0; });
+    var contra = 0;
+    Object.keys(S).forEach(function (k) { if (k.indexOf('st_contra_') === 0 && S[k]) contra++; });
+    if (contra > 0) flags.push(contra + ' thrombolysis contraindication(s) ticked — review carefully.');
+    return {
+      flags: flags,
+      metrics: metrics,
+      scores: [
+        { id: 'nihss', title: 'NIHSS', total: nihssOk ? nihss : null, band: nihssOk ? (nihss + ' points') : 'Complete all items', cls: nihssOk && nihss >= 16 ? 'high' : (nihssOk && nihss >= 5 ? 'mod' : ''), pathway: 'Decision support — clinical judgement prevails.' },
+        { id: 'abcd2', title: 'ABCD²', total: abcd, band: abcd >= 4 ? 'Higher short-term stroke risk' : 'Lower', cls: abcd >= 4 ? 'mod' : '', pathway: 'Decision support — clinical judgement prevails.' }
+      ]
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: Stroke / TIA'];
+    L.push('Type: ' + join(g('st_type')));
+    L.push('Last known well: ' + (S.tsLkw || '—'));
+    L.push('CBG: ' + (S.st_cbg || '—'));
+    var items = ['loc','locq','locc','gaze','visual','facial','motorLarm','motorRarm','motorLleg','motorRleg','ataxia','sensory','language','dysarthria','neglect'];
+    var sum = 0, ok = true;
+    items.forEach(function (k) {
+      var v = S['nihss_' + k];
+      if (v === '' || v == null) ok = false; else sum += parseInt(v, 10) || 0;
+    });
+    L.push('NIHSS total: ' + (ok ? sum : 'incomplete'));
+    L.push('ABCD² items: ' + join(g('st_abcd2')));
+    if (S.st_notes) L.push(S.st_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 6. ABDOMINAL PAIN ========== */
+window.ED_SCENARIOS.push({
+  id: 'abd',
+  title: 'Abdominal pain',
+  short: 'Abdomen',
+  extraTs: [{ id: 'tsPocus', label: 'POCUS done' }, { id: 'tsSurg', label: 'Surgery informed' }],
+  sections: [
+    scChip('abd_site', 'Site', [o('RUQ'), o('LUQ'), o('Epigastric'), o('Periumbilical'), o('RLQ'), o('LLQ'), o('Suprapubic'), o('Diffuse'), o('Flank')], true),
+    scChip('abd_char', 'Character / associated', [o('Colicky'), o('Constant'), o('Migratory'), o('Vomiting'), o('Diarrhoea'), o('Constipation'), o('Jaundice'), o('Dysuria'), o('Haematuria'), o('PV bleeding')], true),
+    scChip('abd_alvarado', 'Alvarado (appendicitis)', [o('Migration to RLQ (+1)'), o('Anorexia (+1)'), o('Nausea/vomiting (+1)'), o('RLQ tenderness (+2)'), o('Rebound (+1)'), o('Fever (+1)'), o('Leukocytosis (+2)'), o('Left shift (+1)')], true),
+    scChip('abd_red', 'Surgical red flags', [o('Peritonitis / rigidity'), o('Shock'), o('Incarcerated hernia'), o('Suspected AAA'), o('Suspected ectopic'), o('Ischaemic bowel'), o('Obstruction')], true),
+    scChip('abd_upt', 'Pregnancy test (childbearing age)', [o('Positive'), o('Negative'), o('Not indicated'), o('Pending')]),
+    scChip('abd_pocus', 'POCUS', [o('Normal'), o('Free fluid'), o('Cholecystitis signs'), o('Hydronephrosis'), o('IUP seen'), o('No IUP + free fluid'), o('AAA'), o('Not done')], true),
+    scArea('abd_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var map = {
+      'Migration to RLQ (+1)': 1, 'Anorexia (+1)': 1, 'Nausea/vomiting (+1)': 1,
+      'RLQ tenderness (+2)': 2, 'Rebound (+1)': 1, 'Fever (+1)': 1,
+      'Leukocytosis (+2)': 2, 'Left shift (+1)': 1
+    };
+    var alv = 0;
+    (g('abd_alvarado') || []).forEach(function (x) { alv += map[x] || 0; });
+    var flags = [];
+    var red = g('abd_red') || [];
+    if (red.length) flags.push('Surgical red flag(s): ' + red.join(', '));
+    if ((g('abd_upt') || []).indexOf('Positive') >= 0 && red.indexOf('Suspected ectopic') >= 0)
+      flags.push('Possible ectopic — urgent OB/Gyn + stabilise.');
+    if (S.sex === 'Female' && !(g('abd_upt') || []).length)
+      flags.push('Consider UPT in females of childbearing age.');
+    return {
+      flags: flags,
+      scores: [{ id: 'alvarado', title: 'Alvarado', total: alv, band: alv >= 7 ? 'High probability' : (alv >= 5 ? 'Compatible' : 'Low'), cls: alv >= 7 ? 'high' : (alv >= 5 ? 'mod' : ''), pathway: 'Decision support — clinical judgement prevails.' }]
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: Abdominal pain'];
+    L.push('Site: ' + join(g('abd_site')));
+    L.push('Features: ' + join(g('abd_char')));
+    L.push('Alvarado items: ' + join(g('abd_alvarado')));
+    L.push('Red flags: ' + join(g('abd_red')));
+    L.push('UPT: ' + join(g('abd_upt')));
+    L.push('POCUS: ' + join(g('abd_pocus')));
+    if (S.abd_notes) L.push(S.abd_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 7. AMS / POISONING ========== */
+window.ED_SCENARIOS.push({
+  id: 'ams',
+  title: 'AMS / Poisoning',
+  short: 'AMS / Tox',
+  extraTs: [
+    { id: 'tsIngestion', label: 'Time of ingestion' },
+    { id: 'tsDecon', label: 'Decontamination' },
+    { id: 'tsAntidote', label: 'Antidote given' }
+  ],
+  sections: [
+    scChip('ams_aeiou', 'AEIOU-TIPS', [o('Alcohol'), o('Epilepsy / electrolytes'), o('Insulin (hypo/hyper)'), o('Opiates / oxygen'), o('Uraemia'), o('Trauma / temp'), o('Infection'), o('Poisoning / psych'), o('Stroke / space-occupying')], true),
+    scChip('ams_tox', 'Toxidrome', [o('Anticholinergic'), o('Cholinergic'), o('Opioid'), o('Sympathomimetic'), o('Sedative-hypnotic'), o('Serotonin'), o('Unknown')], true),
+    scText('ams_agent', 'Poison / agent', ''),
+    scText('ams_dose', 'Dose / amount', ''),
+    scInfo('<span class="badge warn">Paracetamol: note 4-hour (or later) level timing relative to ingestion</span>'),
+    scChip('ams_op', 'Organophosphate features', [o('Salivation'), o('Lacrimation'), o('Urination'), o('Diarrhoea'), o('GI upset'), o('Emesis'), o('Bradycardia'), o('Miosis'), o('Muscle weakness'), o('Fasciculations')], true),
+    scChip('ams_decon', 'Decontamination', [o('Skin/eye wash'), o('Activated charcoal'), o('Gastric lavage (selected)'), o('Whole bowel irrigation'), o('Not indicated')], true),
+    scChip('ams_antidote', 'Antidotes', [o('Naloxone'), o('N-acetylcysteine'), o('Atropine'), o('Pralidoxime'), o('Flumazenil (caution)'), o('Sodium bicarbonate'), o('Fomepizole / ethanol'), o('Other')], true),
+    scChip('ams_mlc', 'MLC', [o('Yes — intentional'), o('Yes — accidental'), o('No'), o('Police informed')], true),
+    scSelect('ams_ge', 'GCS Eye', ['', '4', '3', '2', '1']),
+    scSelect('ams_gv', 'GCS Verbal', ['', '5', '4', '3', '2', '1', 'T']),
+    scSelect('ams_gm', 'GCS Motor', ['', '6', '5', '4', '3', '2', '1']),
+    scArea('ams_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var E = parseInt(S.ams_ge, 10), V = parseInt(S.ams_gv, 10), M = parseInt(S.ams_gm, 10);
+    var total = (!isNaN(E) && !isNaN(V) && !isNaN(M)) ? E + V + M : null;
+    var flags = [];
+    if (total != null && total <= 8) flags.push('GCS ≤8 — airway protection.');
+    if ((g('ams_tox') || []).indexOf('Cholinergic') >= 0 || (g('ams_op') || []).length >= 3)
+      flags.push('Cholinergic / OP pattern — atropine, decontamination, PPE.');
+    if ((S.ams_agent || '').toLowerCase().indexOf('paracetamol') >= 0 || (S.ams_agent || '').toLowerCase().indexOf('acetaminophen') >= 0)
+      flags.push('Paracetamol: plot level on nomogram; start NAC if indicated — do not delay if staggered/unknown time.');
+    return {
+      flags: flags,
+      scores: [{ id: 'gcs', title: 'GCS', total: total, band: total == null ? '' : ('E' + E + 'V' + V + 'M' + M), cls: total != null && total <= 8 ? 'high' : '', pathway: 'Decision support — clinical judgement prevails.' }]
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: Altered mental status / Poisoning'];
+    L.push('AEIOU-TIPS: ' + join(g('ams_aeiou')));
+    L.push('Toxidrome: ' + join(g('ams_tox')));
+    L.push('Agent/dose: ' + (S.ams_agent || '—') + ' / ' + (S.ams_dose || '—'));
+    L.push('Time of ingestion: ' + (S.tsIngestion || '—'));
+    L.push('OP features: ' + join(g('ams_op')));
+    L.push('Decontamination: ' + join(g('ams_decon')));
+    L.push('Antidotes: ' + join(g('ams_antidote')));
+    L.push('GCS: E' + (S.ams_ge || '—') + ' V' + (S.ams_gv || '—') + ' M' + (S.ams_gm || '—'));
+    L.push('MLC: ' + join(g('ams_mlc')));
+    if (S.ams_notes) L.push(S.ams_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 8. PAEDIATRIC FEVER ========== */
+window.ED_SCENARIOS.push({
+  id: 'peds',
+  title: 'Paediatric fever',
+  short: 'Peds fever',
+  extraTs: [{ id: 'tsAntipyretic', label: 'Antipyretic given' }],
+  sections: [
+    scNum('ped_age_mo', 'Age (months)', 'or use header age in years'),
+    scNum('ped_weight', 'Weight (kg)', 'editable; auto-estimate available'),
+    scInfo('<button type="button" class="btn btn-ghost btn-sm" id="btnEstWeight">Estimate weight from age (APLS-style)</button>'),
+    scChip('ped_pat', 'Paediatric Assessment Triangle', [o('Appearance normal'), o('Appearance abnormal'), o('Work of breathing normal'), o('Work of breathing ↑'), o('Circulation to skin normal'), o('Circulation abnormal')], true),
+    scChip('ped_nice', 'NICE traffic-light features', [
+      o('Green — normal activity/colour', 'Green features'),
+      o('Amber — fever ≥5d / tachypnoea / poor feeding', 'Amber features'),
+      o('Red — pale/mottled / non-blanching rash / bulging fontanelle / status / seizures', 'Red features')
+    ], true),
+    scChip('ped_dehy', 'Dehydration', [o('None'), o('Some (CRT slow, dry mucosa)'), o('Severe (CRT>3s, sunken eyes, lethargy)')]),
+    scChip('ped_imm', 'Immunisation', [o('Up to date'), o('Partial'), o('Unknown'), o('None')]),
+    scNum('ped_para_dose', 'Paracetamol dose given (mg)', ''),
+    scNum('ped_ibu_dose', 'Ibuprofen dose given (mg)', ''),
+    scArea('ped_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var w = parseFloat(S.ped_weight);
+    var flags = [];
+    var nice = g('ped_nice') || [];
+    if (nice.some(function (x) { return x.indexOf('Red') === 0; })) flags.push('NICE Red features — urgent senior review / consider sepsis.');
+    if (nice.some(function (x) { return x.indexOf('Amber') === 0; })) flags.push('NICE Amber features — careful observation / investigations.');
+    // vitals by age rough flags
+    var ageMo = parseFloat(S.ped_age_mo);
+    if (isNaN(ageMo) && S.age) ageMo = parseFloat(S.age) * 12;
+    var hr = parseFloat(S.hr), rr = parseFloat(S.rr);
+    if (!isNaN(ageMo) && !isNaN(hr)) {
+      if (ageMo < 12 && hr > 160) flags.push('HR above typical infant range.');
+      if (ageMo >= 12 && ageMo < 60 && hr > 140) flags.push('HR above typical 1–5y range.');
+    }
+    var paraMax = !isNaN(w) ? Math.round(w * 15) : null;
+    var ibuMax = !isNaN(w) ? Math.round(w * 10) : null;
+    var para = parseFloat(S.ped_para_dose);
+    if (!isNaN(para) && paraMax && para > w * 20) flags.push('Paracetamol dose exceeds usual max (~15–20 mg/kg).');
+    return {
+      flags: flags,
+      scores: [
+        { id: 'para', title: 'Paracetamol guide (15 mg/kg)', total: paraMax, band: paraMax != null ? (paraMax + ' mg (max single ≈' + Math.round(w * 20) + ' mg)') : 'Enter weight', cls: '', pathway: 'Decision support — clinical judgement prevails. Check max daily dose.' },
+        { id: 'ibu', title: 'Ibuprofen guide (10 mg/kg)', total: ibuMax, band: ibuMax != null ? (ibuMax + ' mg') : 'Enter weight', cls: '', pathway: 'Decision support — clinical judgement prevails. Avoid if dehydrated / renal risk.' }
+      ]
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: Paediatric fever'];
+    L.push('Age months: ' + (S.ped_age_mo || '—') + '; Weight: ' + (S.ped_weight || '—') + ' kg');
+    L.push('PAT: ' + join(g('ped_pat')));
+    L.push('NICE: ' + join(g('ped_nice')));
+    L.push('Dehydration: ' + join(g('ped_dehy')));
+    L.push('Immunisation: ' + join(g('ped_imm')));
+    L.push('Paracetamol / Ibuprofen given (mg): ' + (S.ped_para_dose || '—') + ' / ' + (S.ped_ibu_dose || '—'));
+    if (S.ped_notes) L.push(S.ped_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 9. OB/GYN ========== */
+window.ED_SCENARIOS.push({
+  id: 'obgyn',
+  title: 'OB / Gyn',
+  short: 'OB/Gyn',
+  extraTs: [{ id: 'tsObstetric', label: 'Obstetric review' }],
+  sections: [
+    scText('ob_lmp', 'LMP (YYYY-MM-DD)', 'use date field'),
+    { type: 'date', id: 'ob_lmp_date', label: 'LMP date' },
+    scText('ob_gpla', 'G P L A', 'e.g. G2P1L1A0'),
+    scChip('ob_sym', 'Symptoms', [o('PV bleeding'), o('Abdominal/pelvic pain'), o('Reduced foetal movements'), o('Headache'), o('Visual symptoms'), o('Epigastric pain'), o('Seizure'), o('Fever'), o('Leaking liquor')], true),
+    scChip('ob_ectopic', 'Ectopic red flags', [o('Unilateral pain'), o('Shoulder tip pain'), o('Syncope / shock'), o('Cervical motion tenderness'), o('No IUP on POCUS + positive UPT')], true),
+    scChip('ob_upt', 'UPT', [o('Positive'), o('Negative'), o('Pending')]),
+    scChip('ob_pph', 'PPH / eclampsia features', [o('Heavy PV bleeding postpartum'), o('Uterine atony'), o('Severe HTN'), o('Clonus'), o('Seizure (eclampsia)'), o('HELLP suspected')], true),
+    scNum('ob_fhr', 'Foetal heart rate', ''),
+    scChip('ob_meows', 'MEOWS-style triggers', [o('SBP ≥140 or DBP ≥90'), o('HR ≥110 or ≤50'), o('RR ≥25 or ≤10'), o('SpO₂ <95%'), o('Temp ≥38'), o('Altered consciousness')], true),
+    scArea('ob_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    var lmp = S.ob_lmp_date || S.ob_lmp;
+    var ga = null, edd = null;
+    if (lmp) {
+      var d = new Date(lmp);
+      if (!isNaN(d.getTime())) {
+        var now = new Date();
+        ga = Math.floor((now - d) / (7 * 24 * 3600 * 1000));
+        edd = new Date(d.getTime() + 280 * 24 * 3600 * 1000);
+      }
+    }
+    if ((g('ob_ectopic') || []).length) flags.push('Ectopic red flags present — urgent assessment.');
+    if ((g('ob_pph') || []).indexOf('Seizure (eclampsia)') >= 0) flags.push('Eclampsia — MgSO4 pathway / airway / BP control.');
+    if ((g('ob_meows') || []).length >= 2) flags.push('≥2 MEOWS-style triggers — escalate / obstetric emergency response.');
+    var eddStr = '';
+    if (edd) {
+      var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+      eddStr = pad(edd.getDate()) + '/' + pad(edd.getMonth() + 1) + '/' + edd.getFullYear();
+    }
+    return {
+      flags: flags,
+      scores: [
+        { id: 'ga', title: 'Gestational age (weeks from LMP)', total: ga, band: ga != null ? (ga + ' weeks') : 'Enter LMP', cls: '', pathway: 'Naegele estimate — confirm with ultrasound. Decision support — clinical judgement prevails.' },
+        { id: 'edd', title: 'EDD (LMP+280d)', total: null, band: eddStr || '—', cls: '', pathway: 'Decision support — clinical judgement prevails.' }
+      ]
+    };
+  },
+  note: function (S, g, join) {
+    var L = ['SCENARIO: OB / Gyn'];
+    L.push('LMP: ' + (S.ob_lmp_date || S.ob_lmp || '—') + '; GPLA: ' + (S.ob_gpla || '—'));
+    L.push('Symptoms: ' + join(g('ob_sym')));
+    L.push('Ectopic flags: ' + join(g('ob_ectopic')));
+    L.push('UPT: ' + join(g('ob_upt')));
+    L.push('PPH/eclampsia: ' + join(g('ob_pph')));
+    L.push('FHR: ' + (S.ob_fhr || '—'));
+    L.push('MEOWS triggers: ' + join(g('ob_meows')));
+    if (S.ob_notes) L.push(S.ob_notes);
+    return L.join('\n');
+  }
+});
+
+/* ========== 10. SYNCOPE ========== */
+window.ED_SCENARIOS.push({
+  id: 'syncope',
+  title: 'Syncope',
+  short: 'Syncope',
+  extraTs: [{ id: 'tsEcgSync', label: 'ECG done' }],
+  sections: [
+    scChip('sy_prodrome', 'Prodrome / context', [o('Vasovagal prodrome'), o('Exertional'), o('While supine'), o('No warning'), o('Postural'), o('Situational'), o('With chest pain'), o('With palpitations')], true),
+    scChip('sy_sfsr', 'San Francisco Syncope Rule (CHESS)', [o('History of CHF'), o('Haematocrit <30%'), o('ECG abnormal'), o('Shortness of breath'), o('Triage SBP <90')], true),
+    scChip('sy_red', 'Red flags', [o('Family hx sudden death'), o('Known structural heart disease'), o('Abnormal ECG'), o('GI bleed signs'), o('Neuro deficit')], true),
+    scArea('sy_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var n = (g('sy_sfsr') || []).length;
+    var flags = [];
+    if (n >= 1) flags.push('SFSR positive (≥1 CHESS) — higher risk; consider admission / further workup.');
+    if ((g('sy_prodrome') || []).indexOf('Exertional') >= 0) flags.push('Exertional syncope — cardiac until proven otherwise.');
+    return {
+      flags: flags,
+      scores: [{ id: 'sfsr', title: 'SFSR (CHESS) positives', total: n, band: n >= 1 ? 'Positive' : 'Negative', cls: n >= 1 ? 'mod' : '', pathway: 'Decision support — clinical judgement prevails.' }]
+    };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: Syncope', 'Context: ' + join(g('sy_prodrome')), 'SFSR: ' + join(g('sy_sfsr')), 'Red flags: ' + join(g('sy_red')), S.sy_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+/* ========== 11. SEIZURE ========== */
+window.ED_SCENARIOS.push({
+  id: 'seizure',
+  title: 'Seizure',
+  short: 'Seizure',
+  extraTs: [{ id: 'tsSeizureOnset', label: 'Seizure onset' }, { id: 'tsBzds', label: 'Benzodiazepine given' }],
+  sections: [
+    scChip('sz_type', 'Type', [o('GTCS'), o('Focal'), o('Absence'), o('Status epilepticus'), o('Psychogenic suspected'), o('First seizure'), o('Known epilepsy')], true),
+    scChip('sz_feat', 'Features', [o('Tongue bite'), o('Incontinence'), o('Post-ictal'), o('Head injury'), o('Pregnancy'), o('Fever'), o('Alcohol withdrawal'), o('Medication non-compliance')], true),
+    scNum('sz_cbg', 'CBG', ''),
+    scChip('sz_rx', 'ED treatment', [o('Airway / O₂'), o('Lorazepam / Midazolam'), o('Levetiracetam'), o('Valproate'), o('Phenytoin'), o('Thiamine / glucose')], true),
+    scArea('sz_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    if ((g('sz_type') || []).indexOf('Status epilepticus') >= 0) flags.push('Status — follow status protocol; time benzodiazepines.');
+    if ((g('sz_feat') || []).indexOf('Pregnancy') >= 0) flags.push('Consider eclampsia — MgSO4.');
+    return { flags: flags, scores: [] };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: Seizure', 'Type: ' + join(g('sz_type')), 'Features: ' + join(g('sz_feat')), 'CBG: ' + (S.sz_cbg || '—'), 'Rx: ' + join(g('sz_rx')), S.sz_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+/* ========== 12. HEADACHE ========== */
+window.ED_SCENARIOS.push({
+  id: 'headache',
+  title: 'Headache',
+  short: 'Headache',
+  extraTs: [{ id: 'tsCtHead', label: 'CT head' }, { id: 'tsLp', label: 'LP done' }],
+  sections: [
+    scChip('ha_red', 'Red flags', [o('Thunderclap'), o('Worst ever'), o('Neck stiffness'), o('Fever'), o('Neuro deficit'), o('Papilloedema'), o('Immunosuppressed'), o('Anticoagulated'), o('Pregnancy / postpartum'), o('Age >50 new'), o('Cancer history')], true),
+    scChip('ha_ottawa', 'Ottawa SAH rule (investigate if ANY)', [o('Age ≥40'), o('Neck pain/stiffness'), o('Witnessed LOC'), o('Onset during exertion'), o('Thunderclap (peak <1s)'), o('Limited neck flexion')], true),
+    scChip('ha_dx', 'Impression chips', [o('Migraine'), o('Tension'), o('Cluster'), o('SAH suspected'), o('Meningitis/encephalitis'), o('Raised ICP'), o('Sinusitis'), o('Other')], true),
+    scArea('ha_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var ot = (g('ha_ottawa') || []).length;
+    var flags = [];
+    if (ot >= 1) flags.push('Ottawa SAH rule positive — cannot rule out SAH clinically; image ± LP per protocol.');
+    if ((g('ha_red') || []).indexOf('Thunderclap') >= 0) flags.push('Thunderclap — SAH until proven otherwise.');
+    return {
+      flags: flags,
+      scores: [{ id: 'ottawa', title: 'Ottawa SAH positives', total: ot, band: ot >= 1 ? 'Positive' : 'Negative (if rule applicable)', cls: ot >= 1 ? 'high' : '', pathway: 'Decision support — clinical judgement prevails. Rule only if inclusion criteria met.' }]
+    };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: Headache', 'Red flags: ' + join(g('ha_red')), 'Ottawa SAH: ' + join(g('ha_ottawa')), 'Impression: ' + join(g('ha_dx')), S.ha_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+/* ========== 13. DKA / HYPERGLYCAEMIA ========== */
+window.ED_SCENARIOS.push({
+  id: 'dka',
+  title: 'DKA / Hyperglycaemia',
+  short: 'DKA',
+  extraTs: [{ id: 'tsInsulin', label: 'Insulin started' }, { id: 'tsFluidsDka', label: 'Fluids started' }],
+  sections: [
+    scNum('dka_cbg', 'CBG / lab glucose (mg/dL)', ''),
+    scNum('dka_ph', 'pH', ''),
+    scNum('dka_hco3', 'HCO₃ (mmol/L)', ''),
+    scChip('dka_ket', 'Ketones', [o('Urine ketones +'), o('Urine ketones +++'), o('Blood ketones elevated'), o('Not done')], true),
+    scChip('dka_type', 'Working diagnosis', [o('DKA'), o('HHS'), o('Simple hyperglycaemia'), o('Mixed')]),
+    scChecklist('dka_bundle', 'Fluid & insulin checklist', [
+      { id: 'd_abc', label: 'ABC / fluid resuscitation started' },
+      { id: 'd_k', label: 'Potassium checked before insulin' },
+      { id: 'd_ins', label: 'Insulin infusion per protocol' },
+      { id: 'd_gluc', label: 'Glucose added when CBG falling' },
+      { id: 'd_monitor', label: 'Hourly CBG / electrolytes plan' },
+      { id: 'd_precip', label: 'Precipitant sought (infection, omission, ACS)' }
+    ]),
+    scArea('dka_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    var ph = parseFloat(S.dka_ph), hco = parseFloat(S.dka_hco3), cbg = parseFloat(S.dka_cbg);
+    if (!isNaN(ph) && ph < 7.3 && !isNaN(hco) && hco < 18) flags.push('Acidosis + low HCO₃ — DKA criteria possible if ketones present.');
+    if (!isNaN(cbg) && cbg > 600) flags.push('Very high glucose — consider HHS; check osmolality.');
+    return { flags: flags, scores: [] };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: DKA / Hyperglycaemia', 'Glucose: ' + (S.dka_cbg || '—'), 'pH / HCO₃: ' + (S.dka_ph || '—') + ' / ' + (S.dka_hco3 || '—'), 'Ketones: ' + join(g('dka_ket')), 'Dx: ' + join(g('dka_type')), S.dka_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+/* ========== 14. ANAPHYLAXIS ========== */
+window.ED_SCENARIOS.push({
+  id: 'anaphylaxis',
+  title: 'Allergy / Anaphylaxis',
+  short: 'Anaphylaxis',
+  extraTs: [{ id: 'tsAdrenaline', label: 'Adrenaline given' }],
+  sections: [
+    scChip('an_trigger', 'Trigger', [o('Food'), o('Drug'), o('Insect sting'), o('Contrast'), o('Unknown'), o('Other')], true),
+    scChip('an_feat', 'Features', [o('Urticaria / angioedema'), o('Respiratory distress / wheeze'), o('Hypotension'), o('GI symptoms'), o('Stridor'), o('Syncope')], true),
+    scNum('an_weight', 'Weight (kg)', 'for adrenaline dose'),
+    scInfo('<div id="anDoseHint" class="badge"></div>'),
+    scChip('an_rx', 'Treatment', [o('Adrenaline IM'), o('Repeat adrenaline'), o('IV fluids'), o('Antihistamine'), o('Steroid'), o('Nebulised bronchodilator'), o('Airway support')], true),
+    scChip('an_disp', 'Observation / plan', [o('Observe ≥4–6h'), o('Admit'), o('Epipen education'), o('Allergy referral')], true),
+    scArea('an_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var w = parseFloat(S.an_weight || S.ped_weight);
+    var flags = [];
+    var feat = g('an_feat') || [];
+    if (feat.indexOf('Hypotension') >= 0 || feat.indexOf('Respiratory distress / wheeze') >= 0 || feat.indexOf('Stridor') >= 0)
+      flags.push('Anaphylaxis features — adrenaline IM immediate if not given.');
+    var dose = null, band = 'Enter weight';
+    if (!isNaN(w)) {
+      // 0.01 mg/kg of 1:1000 = 0.01 ml/kg; usual max 0.5 mg
+      var mg = Math.min(0.5, Math.round(w * 0.01 * 100) / 100);
+      dose = mg;
+      band = mg + ' mg IM (1:1000) ≈ ' + (mg) + ' ml; adult often 0.5 mg';
+    }
+    return {
+      flags: flags,
+      scores: [{ id: 'adr', title: 'Adrenaline IM guide (0.01 mg/kg, max 0.5)', total: dose, band: band, cls: '', pathway: 'Decision support — clinical judgement prevails. Use institutional concentration.' }]
+    };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: Allergy / Anaphylaxis', 'Trigger: ' + join(g('an_trigger')), 'Features: ' + join(g('an_feat')), 'Weight: ' + (S.an_weight || '—') + ' kg', 'Rx: ' + join(g('an_rx')), 'Plan: ' + join(g('an_disp')), S.an_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+/* ========== 15. SNAKE BITE ========== */
+window.ED_SCENARIOS.push({
+  id: 'snake',
+  title: 'Snake bite',
+  short: 'Snake bite',
+  extraTs: [
+    { id: 'tsBite', label: 'Time of bite' },
+    { id: 'tsWbct', label: '20-min WBCT' },
+    { id: 'tsAsv', label: 'ASV started' }
+  ],
+  sections: [
+    scChip('sn_type', 'Suspected syndrome', [o('Haemotoxic'), o('Neurotoxic'), o('Myotoxic'), o('Unknown / dry bite')], true),
+    scChip('sn_local', 'Local signs', [o('Fang marks'), o('Swelling'), o('Bleeding from site'), o('Blistering'), o('Lymphadenopathy')], true),
+    scChip('sn_sys', 'Systemic signs', [o('Ptosis'), o('Ophthalmoplegia'), o('Bulbar weakness'), o('Respiratory weakness'), o('Coagulopathy / bleeding'), o('Dark urine'), o('Shock'), o('Abdominal pain')], true),
+    scChip('sn_wbct', '20-min WBCT', [o('Clotted (negative)'), o('Unclotted (positive)'), o('Not done'), o('Repeat positive')]),
+    scText('sn_asv', 'ASV vials given', 'e.g. 10 vials polyvalent'),
+    scChip('sn_rx', 'Other Rx', [o('Neostigmine trial (neuro)'), o('Ventilatory support'), o('Tetanus'), o('Antibiotics if indicated'), o('Surgical consult')], true),
+    scChip('sn_mlc', 'MLC', [o('Yes'), o('No')]),
+    scArea('sn_notes', 'Notes', 'Species if known; Indian polyvalent ASV context')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    if ((g('sn_wbct') || []).indexOf('Unclotted (positive)') >= 0 || (g('sn_wbct') || []).indexOf('Repeat positive') >= 0)
+      flags.push('WBCT positive — ASV indicated per national protocol.');
+    if ((g('sn_sys') || []).some(function (x) { return x.indexOf('Ptosis') >= 0 || x.indexOf('Respiratory') >= 0; }))
+      flags.push('Neurotoxic features — monitor ventilation; ASV ± neostigmine.');
+    return { flags: flags, scores: [] };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: Snake bite (Indian context)', 'Syndrome: ' + join(g('sn_type')), 'Local: ' + join(g('sn_local')), 'Systemic: ' + join(g('sn_sys')), '20-min WBCT: ' + join(g('sn_wbct')), 'ASV: ' + (S.sn_asv || '—'), 'Other Rx: ' + join(g('sn_rx')), 'MLC: ' + join(g('sn_mlc')), S.sn_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+/* ========== 16. MINOR INJURY / LACERATION ========== */
+window.ED_SCENARIOS.push({
+  id: 'laceration',
+  title: 'Minor injury / Laceration',
+  short: 'Laceration',
+  extraTs: [{ id: 'tsWound', label: 'Wound cleaned / closed' }],
+  sections: [
+    scChip('lac_site', 'Site', [o('Scalp'), o('Face'), o('Hand'), o('Forearm'), o('Leg'), o('Foot'), o('Trunk'), o('Other')], true),
+    scText('lac_size', 'Size / depth', 'e.g. 3 cm, subcutaneous'),
+    scChip('lac_contam', 'Contamination', [o('Clean'), o('Contaminated'), o('Bite'), o('Crush')], true),
+    scChip('lac_neuro', 'Neurovascular', [o('Intact'), o('Sensory deficit'), o('Motor deficit'), o('Vascular concern')], true),
+    scChip('lac_rx', 'Management', [o('Irrigation'), o('LA / block'), o('Sutures'), o('Tissue adhesive'), o('Steristrips'), o('Dressing only'), o('Delayed closure'), o('Foreign body removed')], true),
+    scChip('lac_tetanus', 'Tetanus', [o('Up to date'), o('Booster given'), o('Ig considered'), o('Unknown')]),
+    scArea('lac_notes', 'Notes', 'Suture material / follow-up')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    if ((g('lac_contam') || []).indexOf('Bite') >= 0) flags.push('Bite wound — careful closure decisions; antibiotics as per protocol.');
+    if ((g('lac_neuro') || []).some(function (x) { return x !== 'Intact'; }))
+      flags.push('Neurovascular deficit — senior / specialty review.');
+    return { flags: flags, scores: [] };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: Minor injury / Laceration', 'Site: ' + join(g('lac_site')), 'Size: ' + (S.lac_size || '—'), 'Contamination: ' + join(g('lac_contam')), 'N/V: ' + join(g('lac_neuro')), 'Rx: ' + join(g('lac_rx')), 'Tetanus: ' + join(g('lac_tetanus')), S.lac_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+/* ========== 17. FEVER / DENGUE / MALARIA ========== */
+window.ED_SCENARIOS.push({
+  id: 'tropical',
+  title: 'Fever / Dengue / Malaria',
+  short: 'Tropical fever',
+  extraTs: [{ id: 'tsNs1', label: 'NS1 / dengue test' }, { id: 'tsMp', label: 'Malaria smear / RDT' }],
+  sections: [
+    scChip('tf_syndrome', 'Syndrome', [o('Dengue suspected'), o('Malaria suspected'), o('Enteric fever'), o('Leptospirosis'), o('Scrub typhus'), o('Viral illness'), o('Bacterial sepsis'), o('Other')], true),
+    scChip('tf_dengue_warn', 'Dengue warning signs', [o('Abdominal pain'), o('Persistent vomiting'), o('Fluid accumulation'), o('Mucosal bleed'), o('Lethargy / restlessness'), o('Liver tender / enlarged'), o('HCT rise with rapid platelet drop')], true),
+    scChip('tf_malaria', 'Malaria features', [o('Rigors'), o('Travel / endemic area'), o('Splenomegaly'), o('Altered sensorium'), o('Jaundice'), o('Severe anaemia'), o('Blackwater')], true),
+    scText('tf_plt', 'Platelet count', ''),
+    scText('tf_hct', 'Haematocrit', ''),
+    scChip('tf_tests', 'Tests', [o('NS1'), o('IgM dengue'), o('MP smear'), o('Malaria RDT'), o('Blood culture'), o('WIDAL / Typhidot'), o('CXR')], true),
+    scArea('tf_notes', 'Notes', '')
+  ],
+  compute: function (S, g) {
+    var flags = [];
+    var w = g('tf_dengue_warn') || [];
+    if (w.length) flags.push('Dengue warning sign(s) — close monitoring / consider admission.');
+    if ((g('tf_malaria') || []).some(function (x) { return x.indexOf('Altered') >= 0 || x.indexOf('Blackwater') >= 0 || x.indexOf('Severe') >= 0; }))
+      flags.push('Features of severe malaria — urgent smear + artesunate pathway per protocol.');
+    return {
+      flags: flags,
+      scores: [{ id: 'dw', title: 'Dengue warning signs', total: w.length, band: w.length ? 'Present' : 'None selected', cls: w.length ? 'mod' : '', pathway: 'Decision support — clinical judgement prevails.' }]
+    };
+  },
+  note: function (S, g, join) {
+    return ['SCENARIO: Fever / Dengue / Malaria', 'Syndrome: ' + join(g('tf_syndrome')), 'Dengue warning: ' + join(g('tf_dengue_warn')), 'Malaria features: ' + join(g('tf_malaria')), 'Plt / HCT: ' + (S.tf_plt || '—') + ' / ' + (S.tf_hct || '—'), 'Tests: ' + join(g('tf_tests')), S.tf_notes || ''].filter(Boolean).join('\n');
+  }
+});
+
+console.log('[ED Suite] Scenarios loaded:', window.ED_SCENARIOS.length);
+
+</script>
+<script>
+/* ED EMR Suite — core application */
+(function () {
+  'use strict';
+  var STORAGE_KEY = 'edEmrSuite_v1';
+  var state = {
+    scenarioId: null,
+    chips: {},
+    scores: {},
+    checks: {},
+    locked: false,
+    addenda: [],
+    _autoHeartA: true,
+    _autoHeartR: true
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function val(id) {
+    var el = $(id);
+    if (!el) return (state[id] != null ? String(state[id]) : '') ;
+    if (el.type === 'checkbox') return el.checked;
+    return String(el.value || '').trim();
+  }
+  function setVal(id, v) {
+    var el = $(id);
+    if (el) {
+      if (el.type === 'checkbox') el.checked = !!v;
+      else el.value = v == null ? '' : v;
+    }
+    state[id] = v;
+  }
+  function nowLocal() {
+    var d = new Date();
+    var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function fmtDisplay(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
+      ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function minutesBetween(a, b) {
+    if (!a || !b) return null;
+    var da = new Date(a), db = new Date(b);
+    if (isNaN(da.getTime()) || isNaN(db.getTime())) return null;
+    return Math.round((db - da) / 60000);
+  }
+  function joinList(arr) {
+    return arr && arr.length ? arr.join(', ') : '—';
+  }
+  function getChips(id) { return state.chips[id] || []; }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  function currentScenario() {
+    if (!state.scenarioId || !window.ED_SCENARIOS) return null;
+    for (var i = 0; i < window.ED_SCENARIOS.length; i++) {
+      if (window.ED_SCENARIOS[i].id === state.scenarioId) return window.ED_SCENARIOS[i];
+    }
+    return null;
+  }
+
+  function gatherFieldState() {
+    document.querySelectorAll('[data-field]').forEach(function (el) {
+      var id = el.getAttribute('data-field');
+      if (el.type === 'checkbox') state[id] = el.checked;
+      else state[id] = el.value;
+    });
+    // shared fields by id
+    ['uhid','ptName','age','sex','arrival','mlc','allergies','triage',
+     'hr','bpRight','bpLeft','rr','spo2','temp','gcs','cbg','pain',
+     'tsDoctor','tsDecision','tsDisposition',
+     'docName','docDesig','docReg','docSignTime',
+     'dxText','dcDetail','lamaName','lamaRel','lamaWitness',
+     'xferFacility','xferReason','xferCondition'
+    ].forEach(function (id) {
+      var el = $(id);
+      if (el) state[id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    ['dcPrecautions','dcFollowup','dcInstructions','lamaRisks','lamaSign','xferHandover'].forEach(function (id) {
+      var el = $(id);
+      if (el) state[id] = el.checked;
+    });
+  }
+
+  /* ---------- render scenario picker ---------- */
+  function renderPicker() {
+    var box = $('scenarioGrid');
+    if (!box || !window.ED_SCENARIOS) return;
+    box.innerHTML = window.ED_SCENARIOS.map(function (sc) {
+      var active = state.scenarioId === sc.id ? ' active' : '';
+      return '<button type="button" class="chip scenario' + active + '" data-scenario="' + sc.id + '">' +
+        escapeHtml(sc.short || sc.title) + '</button>';
+    }).join('');
+  }
+
+  /* ---------- render scenario body ---------- */
+  function renderScoreGroup(sec) {
+    var html = '<div class="sublabel">' + escapeHtml(sec.label) + ' <span class="ds" style="font-size:.62rem;font-weight:600;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:2px 6px;border-radius:99px">Decision support</span></div>';
+    (sec.items || []).forEach(function (it) {
+      html += '<div class="heart-block" style="border:1px solid var(--border-thin);border-radius:12px;padding:10px;margin-bottom:8px;background:#fafefc">';
+      html += '<div style="font-size:.82rem;font-weight:600;margin-bottom:4px">' + escapeHtml(it.label) + '</div>';
+      html += '<div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">' + escapeHtml(it.opts || '') + '</div>';
+      html += '<div class="chips" data-score-group="' + sec.id + '" data-score-key="' + it.id + '">';
+      [0, 1, 2].forEach(function (n) {
+        var cur = state.scores[sec.id] && state.scores[sec.id][it.id];
+        var act = cur === n ? ' active' : '';
+        html += '<button type="button" class="chip score' + act + '" data-val="' + n + '">' + n + '</button>';
+      });
+      html += '</div></div>';
+    });
+    html += '<div class="score-box" id="scorebox-' + sec.id + '"><div class="num">—</div><div class="band"></div><div class="pathway"></div></div>';
+    return html;
+  }
+
+  function renderNihss() {
+    var items = [
+      ['loc', '1a LOC', ['0 Alert', '1 Not alert, arousable', '2 Not alert, obtunded', '3 Unresponsive']],
+      ['locq', '1b LOC questions', ['0 Both correct', '1 One correct', '2 None']],
+      ['locc', '1c LOC commands', ['0 Both', '1 One', '2 None']],
+      ['gaze', '2 Best gaze', ['0 Normal', '1 Partial', '2 Forced']],
+      ['visual', '3 Visual', ['0 None', '1 Partial', '2 Complete', '3 Bilateral']],
+      ['facial', '4 Facial palsy', ['0 Normal', '1 Minor', '2 Partial', '3 Complete']],
+      ['motorLarm', '5a Motor L arm', ['0 No drift', '1 Drift', '2 Some effort', '3 No effort', '4 No movement', 'UN Untestable']],
+      ['motorRarm', '5b Motor R arm', ['0 No drift', '1 Drift', '2 Some effort', '3 No effort', '4 No movement', 'UN Untestable']],
+      ['motorLleg', '6a Motor L leg', ['0 No drift', '1 Drift', '2 Some effort', '3 No effort', '4 No movement', 'UN Untestable']],
+      ['motorRleg', '6b Motor R leg', ['0 No drift', '1 Drift', '2 Some effort', '3 No effort', '4 No movement', 'UN Untestable']],
+      ['ataxia', '7 Limb ataxia', ['0 Absent', '1 One limb', '2 Two limbs', 'UN Untestable']],
+      ['sensory', '8 Sensory', ['0 Normal', '1 Mild', '2 Severe']],
+      ['language', '9 Best language', ['0 Normal', '1 Mild aphasia', '2 Severe', '3 Mute']],
+      ['dysarthria', '10 Dysarthria', ['0 Normal', '1 Mild', '2 Severe', 'UN Untestable']],
+      ['neglect', '11 Extinction/inattention', ['0 None', '1 Mild', '2 Profound']]
+    ];
+    var html = '<div class="sublabel">NIHSS full calculator <span class="ds" style="font-size:.62rem;font-weight:600;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:2px 6px;border-radius:99px">Decision support</span></div>';
+    items.forEach(function (it) {
+      html += '<div class="nihss-item"><span class="lab">' + escapeHtml(it[1]) + '</span>';
+      html += '<select data-field="nihss_' + it[0] + '"><option value="">—</option>';
+      it[2].forEach(function (opt) {
+        var m = opt.match(/^(\d+|UN)\s/);
+        var v = m ? m[1] : opt;
+        if (v === 'UN') v = '0'; // score UN as 0 for total but mark
+        var num = opt.match(/^(\d+)/);
+        var valN = num ? num[1] : '0';
+        var sel = String(state['nihss_' + it[0]]) === valN ? ' selected' : '';
+        html += '<option value="' + valN + '"' + sel + '>' + escapeHtml(opt) + '</option>';
+      });
+      html += '</select></div>';
+    });
+    return html;
+  }
+
+  function renderSection(sec) {
+    if (sec.type === 'info') return '<div style="margin:8px 0">' + sec.html + '</div>';
+    if (sec.type === 'nihss') return renderNihss();
+    if (sec.type === 'score-group') return renderScoreGroup(sec);
+    if (sec.type === 'chips') {
+      var multi = sec.multi ? 'true' : 'false';
+      var html = '<div class="sublabel">' + escapeHtml(sec.label) + '</div><div class="chips" data-chip-id="' + sec.id + '" data-multi="' + multi + '">';
+      (sec.options || []).forEach(function (opt) {
+        var v = opt.value, lab = opt.label || opt.value;
+        var act = (state.chips[sec.id] || []).indexOf(v) >= 0 ? ' active' : '';
+        var extra = '';
+        if (String(lab).indexOf('Green') === 0) extra = ' tl-green';
+        if (String(lab).indexOf('Amber') === 0) extra = ' tl-amber';
+        if (String(lab).indexOf('Red') === 0) extra = ' tl-red';
+        html += '<button type="button" class="chip' + extra + act + '" data-val="' + escapeHtml(v) + '">' + escapeHtml(lab) + '</button>';
+      });
+      return html + '</div>';
+    }
+    if (sec.type === 'checklist') {
+      var html = '<div class="sublabel">' + escapeHtml(sec.label) + '</div><div class="checklist">';
+      (sec.items || []).forEach(function (it) {
+        var cid = sec.id + '_' + it.id;
+        var checked = state[cid] || state.checks[cid] ? ' checked' : '';
+        html += '<label class="check-row"><input type="checkbox" data-field="' + cid + '"' + checked + ' /> ' + escapeHtml(it.label) + '</label>';
+      });
+      return html + '</div>';
+    }
+    if (sec.type === 'textarea') {
+      return '<label class="field">' + escapeHtml(sec.label) +
+        '<textarea data-field="' + sec.id + '" placeholder="' + escapeHtml(sec.placeholder || '') + '">' +
+        escapeHtml(state[sec.id] || '') + '</textarea></label>';
+    }
+    if (sec.type === 'select') {
+      var html = '<label class="field">' + escapeHtml(sec.label) + '<select data-field="' + sec.id + '">';
+      (sec.options || []).forEach(function (opt) {
+        var v = typeof opt === 'string' ? opt : opt.value;
+        var lab = typeof opt === 'string' ? (opt || 'Select') : (opt.label || opt.value);
+        var sel = (state[sec.id] || '') === v ? ' selected' : '';
+        html += '<option value="' + escapeHtml(v) + '"' + sel + '>' + escapeHtml(lab || 'Select') + '</option>';
+      });
+      return html + '</select></label>';
+    }
+    if (sec.type === 'date') {
+      return '<label class="field">' + escapeHtml(sec.label) +
+        '<input type="date" data-field="' + sec.id + '" value="' + escapeHtml(state[sec.id] || '') + '" /></label>';
+    }
+    if (sec.type === 'number') {
+      return '<label class="field">' + escapeHtml(sec.label) +
+        '<input type="number" data-field="' + sec.id + '" placeholder="' + escapeHtml(sec.placeholder || '') +
+        '" value="' + escapeHtml(state[sec.id] || '') + '" /></label>';
+    }
+    // text default
+    return '<label class="field">' + escapeHtml(sec.label) +
+      '<input type="text" data-field="' + sec.id + '" placeholder="' + escapeHtml(sec.placeholder || '') +
+      '" value="' + escapeHtml(state[sec.id] || '') + '" /></label>';
+  }
+
+  function renderExtraTimestamps(sc) {
+    var box = $('scenarioTimestamps');
+    if (!box) return;
+    if (!sc || !sc.extraTs || !sc.extraTs.length) {
+      box.innerHTML = '';
+      box.classList.add('hidden');
+      return;
+    }
+    box.classList.remove('hidden');
+    var html = '<h2 class="card-title">Scenario timestamps</h2>';
+    sc.extraTs.forEach(function (t) {
+      html += '<div class="ts-row"><span class="ts-label">' + escapeHtml(t.label) + '</span>';
+      html += '<input type="datetime-local" data-field="' + t.id + '" id="' + t.id + '" value="' + escapeHtml(state[t.id] || '') + '" />';
+      html += '<button type="button" class="btn-now" data-ts="' + t.id + '">Now</button></div>';
+    });
+    box.innerHTML = html;
+  }
+
+  function renderScenario() {
+    var sc = currentScenario();
+    var host = $('scenarioBody');
+    var title = $('scenarioTitle');
+    if (!sc) {
+      host.innerHTML = '<p style="color:var(--muted);margin:0">Select a clinical scenario above to load its template.</p>';
+      title.textContent = 'Scenario details';
+      renderExtraTimestamps(null);
+      updateComputes();
+      return;
+    }
+    title.textContent = sc.title;
+    var html = '';
+    (sc.sections || []).forEach(function (sec) {
+      html += '<div style="margin-bottom:10px">' + renderSection(sec) + '</div>';
+    });
+    html += '<div class="alert danger" id="scenarioFlags"></div>';
+    html += '<div class="metric-badges" id="scenarioMetrics"></div>';
+    html += '<div id="scenarioScores"></div>';
+    host.innerHTML = html;
+    renderExtraTimestamps(sc);
+    bindDynamicHandlers();
+    updateComputes();
+  }
+
+  function bindDynamicHandlers() {
+    document.querySelectorAll('.chips[data-chip-id]').forEach(function (group) {
+      group.onclick = function (e) {
+        var chip = e.target.closest('.chip');
+        if (!chip || state.locked) return;
+        var id = group.getAttribute('data-chip-id');
+        var multi = group.getAttribute('data-multi') === 'true';
+        var v = chip.getAttribute('data-val');
+        state.chips[id] = state.chips[id] || [];
+        if (multi) {
+          var ix = state.chips[id].indexOf(v);
+          if (ix >= 0) state.chips[id].splice(ix, 1);
+          else state.chips[id].push(v);
+          if (id === 'cp_radiation') {
+            if (v === 'None' && state.chips[id].indexOf('None') >= 0)
+              state.chips[id] = ['None'];
+            else state.chips[id] = state.chips[id].filter(function (x) { return x !== 'None'; });
+          }
+        } else {
+          state.chips[id] = state.chips[id][0] === v ? [] : [v];
+        }
+        // re-render chips active state
+        group.querySelectorAll('.chip').forEach(function (c) {
+          c.classList.toggle('active', state.chips[id].indexOf(c.getAttribute('data-val')) >= 0);
+        });
+        onChange();
+      };
+    });
+    document.querySelectorAll('.chips[data-score-group]').forEach(function (group) {
+      group.onclick = function (e) {
+        var chip = e.target.closest('.chip');
+        if (!chip || state.locked) return;
+        var gid = group.getAttribute('data-score-group');
+        var key = group.getAttribute('data-score-key');
+        var n = parseInt(chip.getAttribute('data-val'), 10);
+        state.scores[gid] = state.scores[gid] || {};
+        if (state.scores[gid][key] === n) delete state.scores[gid][key];
+        else state.scores[gid][key] = n;
+        if (gid === 'heart' && key === 'A') state._autoHeartA = false;
+        if (gid === 'heart' && key === 'R') state._autoHeartR = false;
+        group.querySelectorAll('.chip').forEach(function (c) {
+          c.classList.toggle('active', parseInt(c.getAttribute('data-val'), 10) === state.scores[gid][key]);
+        });
+        onChange();
+      };
+    });
+    document.querySelectorAll('[data-field]').forEach(function (el) {
+      el.oninput = el.onchange = function () {
+        if (el.type === 'checkbox') state[el.getAttribute('data-field')] = el.checked;
+        else state[el.getAttribute('data-field')] = el.value;
+        onChange();
+      };
+    });
+    document.querySelectorAll('.btn-now').forEach(function (btn) {
+      btn.onclick = function () {
+        if (state.locked) return;
+        var id = btn.getAttribute('data-ts');
+        var v = nowLocal();
+        setVal(id, v);
+        var inp = document.querySelector('[data-field="' + id + '"]') || $(id);
+        if (inp) inp.value = v;
+        state[id] = v;
+        onChange();
+      };
+    });
+    var est = $('btnEstWeight');
+    if (est) {
+      est.onclick = function () {
+        var ageY = parseFloat(state.age || val('age'));
+        var ageMo = parseFloat(state.ped_age_mo);
+        if (isNaN(ageMo) && !isNaN(ageY)) ageMo = ageY * 12;
+        if (isNaN(ageMo)) { alert('Enter age (years in header or months in scenario)'); return; }
+        // APLS: (age_years * 2) + 8 for 1-5; neonates separate — simple formula
+        var ageYears = ageMo / 12;
+        var w;
+        if (ageMo < 12) w = Math.round((ageMo / 2 + 4) * 10) / 10;
+        else w = Math.round((ageYears * 2 + 8) * 10) / 10;
+        state.ped_weight = String(w);
+        var inp = document.querySelector('[data-field="ped_weight"]');
+        if (inp) inp.value = state.ped_weight;
+        onChange();
+      };
+    }
+  }
+
+  function updateComputes() {
+    gatherFieldState();
+    // sync age into state for compute
+    state.age = val('age');
+    state.sex = val('sex');
+    state.hr = val('hr');
+    state.bpRight = val('bpRight');
+    state.arrival = val('arrival');
+    var sc = currentScenario();
+    var flagsEl = $('scenarioFlags');
+    var metricsEl = $('scenarioMetrics');
+    var scoresEl = $('scenarioScores');
+    if (!sc || !sc.compute) {
+      if (flagsEl) { flagsEl.classList.remove('on'); flagsEl.innerHTML = ''; }
+      if (metricsEl) metricsEl.innerHTML = '';
+      if (scoresEl) scoresEl.innerHTML = '';
+      updateSharedMetrics();
+      updateProgress();
+      saveState();
+      return;
+    }
+    var result = sc.compute(state, getChips) || {};
+    if (flagsEl) {
+      if (result.flags && result.flags.length) {
+        flagsEl.innerHTML = result.flags.map(escapeHtml).join('<br>');
+        flagsEl.classList.add('on');
+      } else { flagsEl.classList.remove('on'); flagsEl.innerHTML = ''; }
+    }
+    if (metricsEl) {
+      metricsEl.innerHTML = (result.metrics || []).map(function (m) {
+        return '<span class="badge' + (m.danger ? ' danger' : '') + '">' + escapeHtml(m.text) + '</span>';
+      }).join('');
+    }
+    // update score boxes inside scenario
+    (result.scores || []).forEach(function (s) {
+      var box = $('scorebox-' + s.id);
+      if (!box) {
+        // create in scenarioScores area
+        return;
+      }
+      box.className = 'score-box' + (s.cls ? ' ' + s.cls : '');
+      box.innerHTML = '<div class="num">' + (s.total == null ? '—' : s.total) + '</div>' +
+        '<div class="band">' + escapeHtml(s.band || '') + '</div>' +
+        '<div class="pathway">' + escapeHtml(s.pathway || 'Decision support — clinical judgement prevails.') + '</div>';
+    });
+    if (scoresEl) {
+      var extras = (result.scores || []).filter(function (s) { return !$('scorebox-' + s.id); });
+      scoresEl.innerHTML = extras.map(function (s) {
+        return '<div class="score-box' + (s.cls ? ' ' + s.cls : '') + '"><div class="num">' +
+          (s.total == null ? '—' : s.total) + '</div><div class="band">' + escapeHtml(s.band || '') +
+          '</div><div class="pathway">' + escapeHtml(s.pathway || '') + '</div></div>';
+      }).join('');
+    }
+    // re-sync heart score chips if auto-updated
+    if (sc.id === 'chest-pain' && state.scores.heart) {
+      document.querySelectorAll('.chips[data-score-group="heart"]').forEach(function (group) {
+        var key = group.getAttribute('data-score-key');
+        group.querySelectorAll('.chip').forEach(function (c) {
+          c.classList.toggle('active', parseInt(c.getAttribute('data-val'), 10) === state.scores.heart[key]);
+        });
+      });
+      var box = $('scorebox-heart');
+      var hs = (result.scores || []).filter(function (x) { return x.id === 'heart'; })[0];
+      if (box && hs) {
+        box.className = 'score-box' + (hs.cls ? ' ' + hs.cls : '');
+        box.innerHTML = '<div class="num">' + (hs.total == null ? '—' : hs.total) + '</div>' +
+          '<div class="band">' + escapeHtml(hs.band || '') + '</div>' +
+          '<div class="pathway">' + escapeHtml(hs.pathway || '') + '</div>';
+      }
+    }
+    state._dischargeWarn = !!result.dischargeWarn;
+    updateSharedMetrics();
+    updateDispositionWarn();
+    updateProgress();
+    saveState();
+  }
+
+  function updateSharedMetrics() {
+    var arrival = val('arrival');
+    var doc = val('tsDoctor');
+    var html = '';
+    var d2d = minutesBetween(arrival, doc);
+    if (d2d != null) html += '<span class="badge">Door-to-doctor: ' + d2d + ' min</span>';
+    var r = null, l = null;
+    var m1 = String(val('bpRight') || '').match(/(\d+)\s*\//);
+    var m2 = String(val('bpLeft') || '').match(/(\d+)\s*\//);
+    if (m1) r = parseInt(m1[1], 10);
+    if (m2) l = parseInt(m2[1], 10);
+    var bpAlert = $('bpDiffAlert');
+    if (bpAlert) {
+      if (r != null && l != null && Math.abs(r - l) > 20) {
+        bpAlert.textContent = 'Inter-arm SBP difference ' + Math.abs(r - l) + ' mmHg (>20).';
+        bpAlert.classList.add('on');
+      } else { bpAlert.classList.remove('on'); bpAlert.textContent = ''; }
+    }
+    var el = $('doorMetrics');
+    if (el) el.innerHTML = html;
+  }
+
+  function updateDispositionWarn() {
+    var d = (state.chips.disposition || [])[0] || '';
+    $('dispDischarge').classList.toggle('on', d === 'Discharge');
+    $('dispLama').classList.toggle('on', d === 'LAMA/DAMA');
+    $('dispTransfer').classList.toggle('on', d === 'Referred/transferred');
+    var warn = $('dispWarn');
+    var msgs = [];
+    if (d === 'Discharge' && state._dischargeWarn)
+      msgs.push('Caution: high-risk features for discharge in current scenario (score / ECG / labs).');
+    if (msgs.length) { warn.innerHTML = msgs.join('<br>'); warn.classList.add('on'); }
+    else { warn.classList.remove('on'); warn.innerHTML = ''; }
+  }
+
+  function updateProgress() {
+    var checks = [
+      !!val('uhid'), !!val('ptName'), !!val('age'), !!val('sex'), !!val('arrival'),
+      !!val('triage'), !!(val('allergies') || ($('nkdaChip') && $('nkdaChip').classList.contains('active'))),
+      !!val('mlc'), !!state.scenarioId,
+      !!((state.chips.disposition || [])[0]),
+      !!val('docName') && !!val('docDesig') && !!val('docReg')
+    ];
+    var done = checks.filter(Boolean).length;
+    var pct = Math.round((done / checks.length) * 100);
+    $('progressPct').textContent = pct + '%';
+    $('progressFill').style.width = pct + '%';
+    var hdrOk = val('uhid') && val('ptName') && val('age') && val('sex') && val('arrival') && val('triage') && val('mlc') &&
+      (val('allergies') || ($('nkdaChip') && $('nkdaChip').classList.contains('active')));
+    $('card-header').classList.toggle('mandatory-empty', !hdrOk);
+  }
+
+  function onChange() {
+    if (state.locked) { saveState(); return; }
+    updateComputes();
+  }
+
+  function validate() {
+    var missing = [];
+    if (!val('uhid')) missing.push('UHID / MRN');
+    if (!val('ptName')) missing.push('Patient name');
+    if (!val('age')) missing.push('Age');
+    if (!val('sex')) missing.push('Sex');
+    if (!val('arrival')) missing.push('Arrival date & time');
+    if (!val('triage')) missing.push('Triage category');
+    if (!val('allergies') && !($('nkdaChip') && $('nkdaChip').classList.contains('active')))
+      missing.push('Allergies (or NKDA)');
+    if (!val('mlc')) missing.push('MLC status');
+    if (!state.scenarioId) missing.push('Clinical scenario');
+    if (!val('docName')) missing.push('Doctor name');
+    if (!val('docDesig')) missing.push('Designation');
+    if (!val('docReg')) missing.push('Registration number');
+    var disp = (state.chips.disposition || [])[0];
+    if (!disp) missing.push('Disposition');
+    if (disp === 'Discharge') {
+      if (!$('dcPrecautions').checked) missing.push('Discharge: return precautions');
+      if (!$('dcFollowup').checked) missing.push('Discharge: follow-up plan');
+      if (!$('dcInstructions').checked) missing.push('Discharge: instructions given');
+    }
+    if (disp === 'LAMA/DAMA') {
+      if (!$('lamaRisks').checked) missing.push('LAMA: risks explained');
+      if (!val('lamaName')) missing.push('LAMA: name');
+      if (!val('lamaRel')) missing.push('LAMA: relationship');
+      if (!val('lamaWitness')) missing.push('LAMA: witness');
+      if (!$('lamaSign').checked) missing.push('LAMA: signature obtained');
+    }
+    if (disp === 'Referred/transferred') {
+      if (!val('xferFacility')) missing.push('Transfer: facility');
+      if (!val('xferReason')) missing.push('Transfer: reason');
+      if (!val('xferCondition')) missing.push('Transfer: condition');
+      if (!$('xferHandover').checked) missing.push('Transfer: handover');
+    }
+    return missing;
+  }
+
+  function pushTx(L, chk, name, doseId, timeId) {
+    var c = $(chk);
+    var dose = val(doseId), time = val(timeId);
+    if (!(c && c.checked) && !dose && !time) return;
+    var s = name;
+    if (dose) s += ' — ' + dose;
+    if (time) s += ' at ' + fmtDisplay(time);
+    L.push(s);
+  }
+
+  function generateNote() {
+    gatherFieldState();
+    var L = [];
+    L.push('══════════════════════════════════════');
+    L.push('EMERGENCY DEPARTMENT CLINICAL NOTE');
+    L.push('ED EMR Suite — NABH-friendly documentation aid');
+    L.push('══════════════════════════════════════');
+    L.push('');
+    L.push('PATIENT DETAILS');
+    L.push('---------------');
+    L.push('UHID: ' + (val('uhid') || '—'));
+    L.push('Name: ' + (val('ptName') || '—'));
+    L.push('Age / Sex: ' + (val('age') || '—') + ' years / ' + (val('sex') || '—'));
+    L.push('Arrival: ' + fmtDisplay(val('arrival')));
+    L.push('Triage: ' + (val('triage') || '—'));
+    var allg = val('allergies') || (($('nkdaChip') && $('nkdaChip').classList.contains('active')) ? 'NKDA' : '—');
+    L.push('Allergies: ' + allg);
+    L.push('MLC: ' + (val('mlc') || '—'));
+    L.push('');
+    L.push('TIME STAMPS');
+    L.push('-----------');
+    L.push('Doctor seen: ' + fmtDisplay(val('tsDoctor')));
+    L.push('Decision: ' + fmtDisplay(val('tsDecision')));
+    L.push('Disposition time: ' + fmtDisplay(val('tsDisposition')));
+    var d2d = minutesBetween(val('arrival'), val('tsDoctor'));
+    if (d2d != null) L.push('Door-to-doctor: ' + d2d + ' minutes');
+    var sc = currentScenario();
+    if (sc && sc.extraTs) {
+      sc.extraTs.forEach(function (t) {
+        L.push(t.label + ': ' + fmtDisplay(state[t.id] || ''));
+      });
+    }
+    L.push('');
+    L.push('VITALS');
+    L.push('------');
+    var pain = ($('pain') && $('pain').value) || val('pain') || '0';
+    L.push('HR ' + (val('hr') || '—') + '/min; BP R ' + (val('bpRight') || '—') + ', L ' + (val('bpLeft') || '—') +
+      '; RR ' + (val('rr') || '—') + '; SpO₂ ' + (val('spo2') || '—') + '%; Temp ' + (val('temp') || '—') +
+      '°C; GCS ' + (val('gcs') || '—') + '; CBG ' + (val('cbg') || '—') + '; Pain ' + pain + '/10');
+    L.push('');
+    if (sc && typeof sc.note === 'function') {
+      L.push(sc.note(state, getChips, joinList));
+    } else {
+      L.push('SCENARIO: ' + (sc ? sc.title : 'Not selected'));
+    }
+    L.push('');
+    L.push('TREATMENT');
+    L.push('---------');
+    var before = L.length;
+    pushTx(L, 'txAspChk', 'Aspirin', 'txAspDose', 'txAspTime');
+    pushTx(L, 'txP2yChk', 'P2Y12 inhibitor', 'txP2yDose', 'txP2yTime');
+    pushTx(L, 'txAcChk', 'Anticoagulant', 'txAcDose', 'txAcTime');
+    pushTx(L, 'txNitChk', 'Nitrate', 'txNitDose', 'txNitTime');
+    pushTx(L, 'txAnalChk', 'Analgesia', 'txAnalDose', 'txAnalTime');
+    pushTx(L, 'txO2Chk', 'Oxygen', 'txO2Dose', 'txO2Time');
+    pushTx(L, 'txOthChk', 'Other', 'txOthDose', 'txOthTime');
+    if (L.length === before) L.push('None documented in shared treatment panel');
+    if (val('dxText')) {
+      L.push('');
+      L.push('ADDITIONAL IMPRESSION');
+      L.push(val('dxText'));
+    }
+    L.push('');
+    L.push('DISPOSITION');
+    L.push('-----------');
+    var disp = (state.chips.disposition || [])[0] || '—';
+    L.push(disp);
+    if (disp === 'Discharge') {
+      L.push('Return precautions: ' + ($('dcPrecautions').checked ? 'Yes' : 'No'));
+      L.push('Follow-up plan: ' + ($('dcFollowup').checked ? 'Yes' : 'No'));
+      L.push('Instructions given: ' + ($('dcInstructions').checked ? 'Yes' : 'No'));
+      if (val('dcDetail')) L.push(val('dcDetail'));
+    }
+    if (disp === 'LAMA/DAMA') {
+      L.push("Risks explained in patient's language: " + ($('lamaRisks').checked ? 'Yes' : 'No'));
+      L.push('Patient/relative: ' + (val('lamaName') || '—') + ' (' + (val('lamaRel') || '—') + ')');
+      L.push('Witness: ' + (val('lamaWitness') || '—'));
+      L.push('Signature obtained: ' + ($('lamaSign').checked ? 'Yes' : 'No'));
+    }
+    if (disp === 'Referred/transferred') {
+      L.push('Receiving facility: ' + (val('xferFacility') || '—'));
+      L.push('Reason: ' + (val('xferReason') || '—'));
+      L.push('Condition: ' + (val('xferCondition') || '—'));
+      L.push('Handover given: ' + ($('xferHandover').checked ? 'Yes' : 'No'));
+    }
+    L.push('');
+    L.push('SIGN-OFF');
+    L.push('--------');
+    L.push((val('docName') || '—') + ', ' + (val('docDesig') || '—'));
+    L.push('Reg. No.: ' + (val('docReg') || '—'));
+    L.push('Signed: ' + fmtDisplay(val('docSignTime') || (state.locked ? nowLocal() : '')));
+    if (state.locked) L.push('Status: SIGNED & LOCKED');
+    if (state.addenda && state.addenda.length) {
+      L.push('');
+      L.push('ADDENDA');
+      L.push('-------');
+      state.addenda.forEach(function (a, i) {
+        L.push((i + 1) + '. [' + fmtDisplay(a.time) + '] ' + a.text);
+      });
+    }
+    L.push('');
+    L.push('— End of note —');
+    L.push('Scores and pathways are decision support — clinical judgement prevails.');
+    L.push('No patient data left this device during generation.');
+    return L.join('\n');
+  }
+
+  function showModal(id) { $(id).classList.add('on'); }
+  function hideModal(id) { $(id).classList.remove('on'); }
+
+  function openGenerate(force) {
+    var missing = validate();
+    if (!force && missing.length) {
+      $('validationContent').innerHTML =
+        '<p style="margin:0 0 8px;font-weight:600;color:#991b1b">Missing mandatory / required fields:</p>' +
+        '<ul class="validation-list">' + missing.map(function (m) { return '<li>' + escapeHtml(m) + '</li>'; }).join('') + '</ul>' +
+        '<p style="margin:12px 0 0;font-size:.85rem;color:var(--muted)">Complete for NABH-friendly note, or generate anyway.</p>';
+      showModal('modalValidate');
+      return;
+    }
+    hideModal('modalValidate');
+    $('notePreview').textContent = generateNote();
+    showModal('modalNote');
+  }
+
+  function setLocked(on) {
+    state.locked = on;
+    document.body.classList.toggle('locked', on);
+    $('lockBadge').classList.toggle('on', on);
+    $('btnLock').style.display = on ? 'none' : 'inline-block';
+    $('btnUnlock').style.display = on ? 'inline-block' : 'none';
+    saveState();
+  }
+
+  function renderAddenda() {
+    $('addendumList').innerHTML = (state.addenda || []).map(function (a, i) {
+      return '<div style="padding:8px;border:1px solid var(--border-thin);border-radius:8px;margin-bottom:6px"><strong>#' +
+        (i + 1) + '</strong> · ' + fmtDisplay(a.time) + '<br>' + escapeHtml(a.text) + '</div>';
+    }).join('');
+  }
+
+  function collectState() {
+    gatherFieldState();
+    var fields = {};
+    document.querySelectorAll('input, select, textarea').forEach(function (el) {
+      if (!el.id && !el.getAttribute('data-field')) return;
+      var key = el.id || el.getAttribute('data-field');
+      fields[key] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    return {
+      scenarioId: state.scenarioId,
+      chips: state.chips,
+      scores: state.scores,
+      fields: fields,
+      extras: state,
+      locked: state.locked,
+      addenda: state.addenda,
+      _autoHeartA: state._autoHeartA,
+      _autoHeartR: state._autoHeartR
+    };
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+    } catch (e) { /* ignore */ }
+  }
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      state.scenarioId = s.scenarioId || null;
+      state.chips = s.chips || {};
+      state.scores = s.scores || {};
+      state.addenda = s.addenda || [];
+      state._autoHeartA = s._autoHeartA !== false;
+      state._autoHeartR = s._autoHeartR !== false;
+      if (s.fields) {
+        Object.keys(s.fields).forEach(function (k) {
+          state[k] = s.fields[k];
+          var el = $(k) || document.querySelector('[data-field="' + k + '"]');
+          if (!el) return;
+          if (el.type === 'checkbox') el.checked = !!s.fields[k];
+          else el.value = s.fields[k] == null ? '' : s.fields[k];
+        });
+      }
+      if (s.extras) {
+        Object.keys(s.extras).forEach(function (k) {
+          if (typeof s.extras[k] !== 'object' || s.extras[k] === null)
+            state[k] = s.extras[k];
+        });
+      }
+      if (state.triage) {
+        $('triage').value = state.triage;
+        document.querySelectorAll('#triageChips .chip').forEach(function (c) {
+          c.classList.toggle('active', c.getAttribute('data-val') === state.triage);
+        });
+      }
+      if ((state.allergies || '').toUpperCase() === 'NKDA') $('nkdaChip').classList.add('active');
+      if ($('pain') && state.pain != null) { $('pain').value = state.pain; $('painVal').textContent = state.pain; }
+      renderAddenda();
+      if (s.locked) setLocked(true);
+    } catch (e) { console.warn(e); }
+  }
+
+  function selectScenario(id) {
+    state.scenarioId = id;
+    renderPicker();
+    renderScenario();
+    saveState();
+  }
+
+  function bindShared() {
+    $('scenarioGrid').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-scenario]');
+      if (!b || state.locked) return;
+      selectScenario(b.getAttribute('data-scenario'));
+    });
+
+    $('triageChips').addEventListener('click', function (e) {
+      var chip = e.target.closest('.chip');
+      if (!chip || state.locked) return;
+      var was = chip.classList.contains('active');
+      $('triageChips').querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+      if (!was) { chip.classList.add('active'); $('triage').value = chip.getAttribute('data-val'); }
+      else $('triage').value = '';
+      state.triage = $('triage').value;
+      onChange();
+    });
+
+    $('nkdaChip').addEventListener('click', function () {
+      if (state.locked) return;
+      this.classList.toggle('active');
+      if (this.classList.contains('active')) { $('allergies').value = 'NKDA'; state.allergies = 'NKDA'; }
+      else if (val('allergies') === 'NKDA') { $('allergies').value = ''; state.allergies = ''; }
+      onChange();
+    });
+
+    document.querySelectorAll('.btn-now[data-ts]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (state.locked) return;
+        var id = btn.getAttribute('data-ts');
+        setVal(id, nowLocal());
+        var chkMap = {
+          txAspTime: 'txAspChk', txP2yTime: 'txP2yChk', txAcTime: 'txAcChk',
+          txNitTime: 'txNitChk', txAnalTime: 'txAnalChk', txO2Time: 'txO2Chk', txOthTime: 'txOthChk'
+        };
+        if (chkMap[id] && $(chkMap[id])) $(chkMap[id]).checked = true;
+        onChange();
+      });
+    });
+
+    // disposition chips
+    document.querySelector('.chips[data-chip-id="disposition"]').addEventListener('click', function (e) {
+      var chip = e.target.closest('.chip');
+      if (!chip || state.locked) return;
+      var v = chip.getAttribute('data-val');
+      var cur = (state.chips.disposition || [])[0];
+      state.chips.disposition = cur === v ? [] : [v];
+      this.querySelectorAll('.chip').forEach(function (c) {
+        c.classList.toggle('active', (state.chips.disposition || [])[0] === c.getAttribute('data-val'));
+      });
+      onChange();
+    });
+
+    $('pain').addEventListener('input', function () {
+      $('painVal').textContent = this.value;
+      state.pain = this.value;
+      onChange();
+    });
+
+    document.getElementById('sharedFields').addEventListener('input', onChange);
+    document.getElementById('sharedFields').addEventListener('change', onChange);
+
+    document.querySelectorAll('[data-close]').forEach(function (btn) {
+      btn.addEventListener('click', function () { hideModal(btn.getAttribute('data-close')); });
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(function (bd) {
+      bd.addEventListener('click', function (e) { if (e.target === bd) bd.classList.remove('on'); });
+    });
+
+    $('btnValidate').addEventListener('click', function () {
+      var missing = validate();
+      if (!missing.length) {
+        $('validationContent').innerHTML = '<p style="margin:0;font-weight:600;color:#047857">All mandatory fields complete.</p>';
+      } else {
+        $('validationContent').innerHTML = '<p style="margin:0 0 8px;font-weight:600;color:#991b1b">Missing:</p><ul class="validation-list">' +
+          missing.map(function (m) { return '<li>' + escapeHtml(m) + '</li>'; }).join('') + '</ul>';
+      }
+      showModal('modalValidate');
+    });
+    $('btnGenerate').addEventListener('click', function () { openGenerate(false); });
+    $('btnGenFromValidate').addEventListener('click', function () { openGenerate(true); });
+
+    $('btnCopy').addEventListener('click', function () {
+      var text = $('notePreview').textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          $('btnCopy').textContent = 'Copied!';
+          setTimeout(function () { $('btnCopy').textContent = 'Copy'; }, 1500);
+        }).catch(function () { fallbackCopy(text); });
+      } else fallbackCopy(text);
+    });
+    function fallbackCopy(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      $('btnCopy').textContent = 'Copied!';
+      setTimeout(function () { $('btnCopy').textContent = 'Copy'; }, 1500);
+    }
+    $('btnDownload').addEventListener('click', function () {
+      var blob = new Blob([$('notePreview').textContent], { type: 'text/plain;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = ((val('uhid') || 'ed-note') + '_' + (state.scenarioId || 'note') + '.txt').replace(/[^\w.\-]+/g, '_');
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    $('btnPrint').addEventListener('click', function () { window.print(); });
+
+    $('btnLock').addEventListener('click', function () {
+      var missing = [];
+      if (!val('docName')) missing.push('Doctor name');
+      if (!val('docDesig')) missing.push('Designation');
+      if (!val('docReg')) missing.push('Registration number');
+      if (missing.length) { alert('Cannot lock — missing: ' + missing.join(', ')); return; }
+      if (!val('docSignTime')) setVal('docSignTime', nowLocal());
+      setLocked(true);
+    });
+    $('btnUnlock').addEventListener('click', function () {
+      if (confirm('Unlock signed note? Prefer addendum for audit trail.')) setLocked(false);
+    });
+    $('btnAddendum').addEventListener('click', function () {
+      var t = val('addendumText') || ($('addendumText') && $('addendumText').value);
+      if (!t || !String(t).trim()) { alert('Enter addendum text'); return; }
+      state.addenda.push({ time: nowLocal(), text: String(t).trim() });
+      $('addendumText').value = '';
+      renderAddenda();
+      saveState();
+    });
+    $('btnNew').addEventListener('click', function () {
+      if (!confirm('Clear all fields for a new patient?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+  }
+
+  function init() {
+    if (!window.ED_SCENARIOS || !window.ED_SCENARIOS.length) {
+      console.error('No scenarios loaded');
+    }
+    if (!val('arrival') && $('arrival')) $('arrival').value = nowLocal();
+    loadState();
+    // restore disposition chip UI
+    var dispGroup = document.querySelector('.chips[data-chip-id="disposition"]');
+    if (dispGroup) {
+      dispGroup.querySelectorAll('.chip').forEach(function (c) {
+        c.classList.toggle('active', (state.chips.disposition || [])[0] === c.getAttribute('data-val'));
+      });
+    }
+    renderPicker();
+    renderScenario();
+    bindShared();
+    updateProgress();
+    updateDispositionWarn();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+  // expose for tests
+  window.ED_APP = {
+    selectScenario: selectScenario,
+    generateNote: generateNote,
+    validate: validate,
+    getState: function () { return state; },
+    currentScenario: currentScenario
+  };
+})();
+
+</script>
+</body>
+</html>
